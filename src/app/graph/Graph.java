@@ -1,7 +1,6 @@
 package app.graph;
 
 import app.core.App;
-import app.core.OPT;
 import toxi.physics2d.VerletParticle2D;
 import toxi.physics2d.VerletSpring2D;
 import toxi.physics2d.behaviors.AttractionBehavior2D;
@@ -18,18 +17,11 @@ import java.util.HashMap;
  * Created on 2/13/14.
  */
 public class Graph {
-	private static XMLmap Map;
-	private static HashMap<Integer, GNode> nodeIndex = new HashMap<>();
-	private static HashMap<Integer, ArrayList<GNode>> edgeIndex = new HashMap<>();
-	public ArrayList<GNode> nodes;
-	public ArrayList<GEdge> edges;
-
-	public Graph() {
-		Map = new XMLmap();
-		nodes = new ArrayList<>();
-		edges = new ArrayList<>();
-//		XMLtool.unmarshal();
-	}
+	private static XMLmap Map = new XMLmap();
+	private static HashMap<Integer, Node> nodeIndex = new HashMap<>();
+	private static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
+	public static ArrayList<Node> nodes = new ArrayList<>();
+	public static ArrayList<Edge> edges = new ArrayList<>();
 
 	public void build() {
 		Map = new XMLmap();
@@ -37,18 +29,43 @@ public class Graph {
 		Map.setEdges(edges);
 		edgeIndex = new HashMap<>();
 		nodeIndex = new HashMap<>();
-		for (GNode n : nodes) { nodeIndex.put(n.getId(), n); }
-		for (GEdge e : edges) {
-			ArrayList<GNode> nlist = edgeIndex.get(e.getFrom());
-			if (nlist == null) {
-				nlist = new ArrayList<>();
-				edgeIndex.put(e.getFrom(), nlist);
-			}
+		for (Node n : nodes) { nodeIndex.put(n.getId(), n); }
+		for (Edge e : edges) {
+			ArrayList<Node> nlist = edgeIndex.get(e.getFrom());
+			if (nlist == null) { nlist = new ArrayList<>(); edgeIndex.put(e.getFrom(), nlist); }
 			nlist.add(nodeIndex.get(e.getTo()));
 			System.out.println();
-		} marshal();
+		} writeToXML();
 	}
-	public static void marshal() {
+
+	public void rebuild() {
+		readFromXML();
+		nodes = new ArrayList<>();
+		edges = new ArrayList<>();
+		App.PSYS.reset();
+		edgeIndex = new HashMap<>();
+		nodeIndex = new HashMap<>();
+		for (Node n : Map.getNodes()) {
+			n.setParticle2D(new VerletParticle2D(n.getX(), n.getY()));
+			n.setBehavior2D(new AttractionBehavior2D(n.getParticle2D(), n.getRadius(), -1));
+			n.update();
+			nodes.add(n);
+			nodeIndex.put(n.getId(), n);
+			App.PSYS.addParticle(n);
+		} for (Edge e : Map.getEdges()) {
+			e.setA(getNode(e.getFrom()));
+			e.setB(getNode(e.getTo()));
+			e.setSpring2D(new VerletSpring2D(e.getA().getParticle2D(), e.getB().getParticle2D(), e.getLength(), 0.001f));
+			e.update();
+			edges.add(e);
+			App.PSYS.addSpring(e);
+			ArrayList<Node> nlist = edgeIndex.get(e.getFrom());
+			if (nlist == null) { nlist = new ArrayList<>(); edgeIndex.put(e.getFrom(), nlist); }
+			nlist.add(nodeIndex.get(e.getTo()));
+		}
+		build();
+	}
+	private static void writeToXML() {
 		File file = new File(App.filepath);
 		File staticFile = new File(App.staticFilepath);
 		try {
@@ -60,78 +77,56 @@ public class Graph {
 			m.marshal(Graph.getMap(), staticFile);
 		} catch (JAXBException e) { e.printStackTrace(); }
 	}
-
-	//	/************************************************* XML READER ******************************************/
-	public static XMLmap unmarshal() {
+	private static XMLmap readFromXML() {
 		XMLmap map = new XMLmap();
 		try {
 			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
-			Unmarshaller m = jc.createUnmarshaller();
-			map = (XMLmap) m.unmarshal(new File(App.staticFilepath));
-			for (GNode n : map.getNodes()) { System.out.println(n.getId() + "::" + n.getName() + "=>" + n.getSize()); }
+			Unmarshaller um = jc.createUnmarshaller();
+			map = (XMLmap) um.unmarshal(new File(App.staticFilepath));
+			for (Node n : map.getNodes()) { System.out.println(n.getId() + "::" + n.getName() + "=>" + n.getSize()); }
 			setMap(map);
 		} catch (JAXBException e) { e.printStackTrace(); } return map;
 	}
-	public void rebuild() {
-		unmarshal();
-		nodes = new ArrayList<>();
-		edges = new ArrayList<>();
-		App.PSYS.reset();
-		edgeIndex = new HashMap<>();
-		nodeIndex = new HashMap<>();
-		OPT X = App.CONF;
-		for (GNode n : Map.getNodes()) {
-			n.setParticle2D(new VerletParticle2D(n.getX(), n.getY()));
-			n.setBehavior2D(new AttractionBehavior2D(n.getParticle2D(), n.getRadius(), -1));
-			n.update(X.particleWeight, X.behaviorScale, X.behaviorStrength);
-			nodes.add(n);
-			nodeIndex.put(n.getId(), n);
-			App.PSYS.addParticle(n);
-		} for (GEdge e : Map.getEdges()) {
-			e.setNodeA(getNode(e.getFrom()));
-			e.setNodeB(getNode(e.getTo()));
-			e.setSpring2D(new VerletSpring2D(e.getNodeA().getParticle2D(), e.getNodeB().getParticle2D(), e.getLength(), 0.001f));
-			e.update(X.springStrength, X.springScale);
-			edges.add(e);
-			App.PSYS.addSpring(e);
-			ArrayList<GNode> nlist = edgeIndex.get(e.getFrom());
-			if (nlist == null) { nlist = new ArrayList<>(); edgeIndex.put(e.getFrom(), nlist); }
-			nlist.add(nodeIndex.get(e.getTo()));
-		}
-		build();
-	}
-
-	public void addNode(GNode n) {
+	public void addNode(Node n) {
 		nodes.add(n);
 		App.PSYS.addParticle(n);
 		build();
 	}
-	public void addEdge(GEdge e) {
+	public void addEdge(Edge e) {
 		edges.add(e);
 		App.PSYS.addSpring(e);
 		build();
 	}
-	public void removeNode(GNode n) {
+	public void removeNode(Node n) {
 		nodes.remove(n);
 		nodeIndex.remove(n.getId());
 		App.PSYS.removeParticle(n);
 	}
-	public void removeEdge(GEdge e) {
+	public void removeEdges(ArrayList<Edge> edges) { for (Edge e : edges) { removeEdge(e); } }
+	public void removeEdge(Edge e) {
 		edges.remove(e);
 		edgeIndex.remove(e.getFrom());
 		App.PSYS.removeSpring(e);
+		build();
 	}
-	public void addNodes(ArrayList<GNode> nodes) { for (GNode n : nodes) { addNode(n); }}
-	public void addEdges(ArrayList<GEdge> edges) { for (GEdge e : edges) {addEdge(e);} }
 
 	public static XMLmap getMap() { return Map; }
+	public static Node getNode(int id) {return nodeIndex.get(id);}
 	public static void setMap(XMLmap Map) { Graph.Map = Map; }
-	public HashMap<Integer, ArrayList<GNode>> getEdgeIndex() { return edgeIndex; }
-	public HashMap<Integer, GNode> getNodeIndex() { return nodeIndex; }
-	public void setNodes(ArrayList<GNode> nodes) { this.nodes = nodes; }
-	public void setEdges(ArrayList<GEdge> edges) { this.edges = edges; }
-	public static GNode getNode(int id) {return nodeIndex.get(id);}
-	public void reset() {
-		nodes.clear(); edges.clear(); build();
-	}
 }
+/*	public void addNodes(ArrayList<Node> nodes) { for (Node n : nodes) { addNode(n); }}
+	public void addEdges(ArrayList<Edge> edges) { for (Edge e : edges) {addEdge(e);} }
+	public HashMap<Integer, ArrayList<Node>> getEdgeIndex() { return edgeIndex; }
+	public HashMap<Integer, Node> getNodeIndex() { return nodeIndex; }
+	public void setNodes(ArrayList<Node> nodes) { this.nodes = nodes; }
+	public void setEdges(ArrayList<Edge> edges) { this.edges = edges; }
+	public void reset() { nodes.clear(); edges.clear(); build(); }*/
+/*	@XmlTransient
+	private HashMap<Integer, ArrayList<Node>> relationIndex = new HashMap<>();
+	@XmlTransient
+	private HashMap<Integer, Node> nodeIndex = new HashMap<>();*/
+
+//	public void setRelationIndex(HashMap<Integer, ArrayList<Node>> relationIndex) {this.relationIndex = relationIndex;}
+//	public void setNodeIndex(HashMap<Integer, Node> nodeIndex) {this.nodeIndex = nodeIndex;}
+//	public HashMap<Integer, ArrayList<Node>> getRelationIndex() { return relationIndex; }
+//	public HashMap<Integer, Node> getNodeIndex() { return nodeIndex; }

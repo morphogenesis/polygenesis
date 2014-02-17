@@ -1,5 +1,7 @@
 package app.core;
 
+import app.graph.Node;
+import app.ui.Editor;
 import controlP5.*;
 import util.Color;
 
@@ -17,20 +19,96 @@ public class Gui implements Serializable {
 	public static Group physConfig;
 	public static Textfield nameTextfield;
 	public static Accordion accordion;
+
+	public static boolean updateGraph;
+	public static boolean drawGraphOutline = true;
+	public static boolean drawGraphNodes = true;
+	public static boolean drawGraphEdges = true;
+
+	public static boolean updatePhysics = true;
+	public static boolean drawPhysInfo;
+	public static boolean drawPhysParticles = true;
+	public static boolean drawPhysSprings = true;
+	public static boolean drawPhysMindist;
+	public static boolean drawPhysBehaviors;
+	public static boolean drawPhysWeights;
+
+	public static boolean updateVoronoi = true;
+	public static boolean drawVoronoi;
+	public static boolean drawVorPoly = true;
+	public static boolean drawVorBez;
+	public static boolean drawVorVec;
+
+	public static boolean doClip;
+
+	public static float world_scale;
+	public static float particleScale = 1;
+	public static float particleWeight = 0.5f;
+	public static float particlePadding = 0.1f;
+	public static float behaviorScale = 2f;
+	public static float behaviorStrength = -0.3f;
+	public static float springScale = 1;
+	public static float springStrength = 0.001f;
+	public static float mindistStrength = 0.001f;
+	public static float PHYS_DRAG;
+	public static float psys_boundsScale;
 	public static float psys_perimRad = 100;
 	public static float psys_perimRes = 100;
 	public static float vor_perimRes = 10;
 	public static float vor_perimScale = 1;
 	public static float vor_boundsScale = 1;
 	public static float vor_clipScale = 1;
-	public static boolean showVoronoi;
-	public static boolean showPolygons;
-	public static boolean showBezier;
-	public static boolean showVerts;
-	public static boolean UPDATE_VORONOI = true;
-	App app;
-	public Gui(App app) { this.app = app; }
+	public static void controlEvent(App app, ControlEvent theEvent) {
+		if (!theEvent.isGroup()) {
+			float theValue = theEvent.getController().getValue();
+			System.out.println(theEvent.getController().getName() + "=>" + theValue);
+			switch (theEvent.getController().getName()) {
+				case "file_quit": System.out.println("[quit]"); app.exit(); break;
+				case "file_open": App.GRAPH.rebuild(); break;
+				case "file_save": App.GRAPH.build(); break;
+//				case "file_print": app.beginRecord(P8gGraphicsSVG.SVG, "./out/svg/print-###.svg"); App.RECORDING = true; break;
+
+				case "view_nodes": drawGraphNodes = !drawGraphNodes; break;
+				case "view_edges": drawGraphEdges = !drawGraphEdges; break;
+				case "view_outliner": drawGraphOutline = !drawGraphOutline; break;
+				case "view_particles": drawPhysParticles = !drawPhysParticles; break;
+				case "view_springs": drawPhysSprings = !drawPhysSprings; break;
+				case "view_minDist": drawPhysMindist = !drawPhysMindist; break;
+				case "view_weights": drawPhysWeights = !drawPhysWeights; break;
+				case "view_behaviors": drawPhysBehaviors = !drawPhysBehaviors; break;
+				case "view_voronoi": drawVoronoi = !drawVoronoi; break;
+
+				case "view_physInfo": drawPhysInfo = !drawPhysInfo; break;
+
+				case "run_physics": updatePhysics = !updatePhysics; break;
+				case "run_flowgraph": updateGraph = !updateGraph; break;
+				case "run_voronoi": updateVoronoi = !updateVoronoi; break;
+
+				case "edit_addMinDist": App.PSYS.addMinDist(); break;
+				case "edit_addPerim": App.PSYS.addPerim(); break;
+				case "edit_rebuildMinD": App.PSYS.clearMinDist(); App.PSYS.addMinDist(); break;
+				case "edit_clearMinD": App.PSYS.clearMinDist(); break;
+				case "edit_clearPhys": App.PSYS.reset(); break;
+//				case "edit_clearAll": App.PSYS = new PSys(app); App.GRAPH.reset(); break;
+				case "world_scale": world_scale = theValue; break;
+				case "verlet_drag": PHYS_DRAG = theValue; break;
+				case "particle_scale": particleScale = theValue; break;
+				case "mindist_strength": mindistStrength = theValue; break;
+				case "particle_strength": particleWeight = theValue; break;
+				case "behavior_scale": behaviorScale = theValue; break;
+				case "behavior_strength": behaviorStrength = theValue; break;
+				case "spring_scale": springScale = theValue; break;
+				case "spring_strength": springStrength = theValue; break;
+				case "vor_perimRes": vor_perimRes = theValue; break;
+				case "vor_perimScale": vor_perimScale = theValue; break;
+				case "vor_boundsScale": vor_boundsScale = theValue; break;
+				case "psys_perimRes": psys_perimRes = theValue; break;
+				case "psys_perimRad": psys_perimRad = theValue; break;
+			}
+		}
+	}
 	public static void initGUI(App app) {
+
 		CP5.enableShortcuts();
 		CP5.setAutoDraw(false);
 		CP5.setFont(App.pfont, 10);
@@ -39,57 +117,55 @@ public class Gui implements Serializable {
 		CP5.setColorCaptionLabel(Color.CP5_CAP).setColorValueLabel(Color.CP5_VAL);
 		initGUImenu();
 		initGuiPhysProperties(app);
+		voronoiOptions();
 		initGuiObProperties(app);
+		editorOptions();
 		initGUI_styles();
 		accordion = CP5.addAccordion("acc").setPosition(0, 92).setWidth(220).setCollapseMode(Accordion.MULTI);
 		accordion.addItem(physConfig).addItem(vorConfig).addItem(generator).addItem(properties);
 		accordion.open(0, 1);
 	}
 	public static void initGuiPhysProperties(App app) {
-		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(340);
-		CP5.begin(10, 8);
+		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(236);
+		CP5.begin(10, 10);
 		CP5.addSlider("world_scale").setRange(1, 20).setDecimalPrecision(0).linebreak().setGroup(physConfig);
 		CP5.addSlider("verlet_drag").setValue(0.32f).setRange(0.1f, 1).setDecimalPrecision(2).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_scale").setValue(OPT.particleScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("spring_scale").setValue(OPT.springScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_scale").setValue(OPT.behaviorScale).setRange(0, 7).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_strength").setValue(OPT.particleWeight).setRange(0.1f, 5).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_strength").setValue(OPT.behaviorStrength).setRange(-5f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
-		CP5.addSlider("spring_strength").setValue(OPT.springStrength).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physConfig);
-		CP5.addSlider("mindist_strength").setValue(OPT.mindistStrength).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("particle_scale").setValue(particleScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("spring_scale").setValue(springScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("behavior_scale").setValue(behaviorScale).setRange(0, 7).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("particle_strength").setValue(particleWeight).setRange(0.1f, 5).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("behavior_strength").setValue(behaviorStrength).setRange(-5f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("spring_strength").setValue(springStrength).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physConfig);
+		CP5.addSlider("mindist_strength").setValue(mindistStrength).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physConfig);
 		CP5.end();
-		vorConfig = CP5.addGroup("VORONOI SETTINGS").setBackgroundHeight(340);
-		CP5.begin(10, 15);
+	}
+	private static void voronoiOptions() {
+		vorConfig = CP5.addGroup("VORONOI SETTINGS").setBackgroundHeight(164);
+		CP5.begin(10, 10);
 		CP5.addSlider("psys_perimRes").setValue(psys_perimRes).setRange(50, 300).setDecimalPrecision(0).setGroup(vorConfig).linebreak();
 		CP5.addSlider("psys_perimRad").setValue(psys_perimRad).setRange(10, 300).setDecimalPrecision(0).setGroup(vorConfig).linebreak();
 		CP5.addSlider("vor_perimRes").setValue(vor_perimRes).setRange(4, 20).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_perimScale").setValue(vor_perimScale).setRange(.1f, .9f).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
+		CP5.addSlider("vor_perimScale").setValue(vor_perimScale).setRange(.1f, 2f).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
 		CP5.addSlider("vor_boundsScale").setValue(vor_boundsScale).setRange(1, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
 		CP5.addSlider("vor_clipScale").setValue(vor_clipScale).setRange(1, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
 
 		CP5.end();
 	}
 	public static void initGuiObProperties(App app) {
-		properties = CP5.addGroup("OBJECT_PROPERTIES").setBackgroundHeight(200).setBarHeight(32).setWidth(220);
+		properties = CP5.addGroup("OBJECT_PROPERTIES").setBackgroundHeight(200);
 		CP5.begin(0, 0);
 		radiusSlider = CP5.addKnob("setSize").setCaptionLabel("Size").setRange(0, 500).setPosition(10, 30).setDecimalPrecision(1).setGroup(properties);
-		radiusSlider.setValue(50);
-		radiusSlider.addListener(new radiusSliderListener());
-		radiusSlider.hide();
+		radiusSlider.setValue(50); radiusSlider.addListener(new radiusSliderListener()); radiusSlider.hide();
 		colorSlider = CP5.addKnob("setColor").setCaptionLabel("Color").setRange(0, 100).setPosition(80, 30).setDecimalPrecision(0).setGroup(properties);
-		colorSlider.setValue(50);
-		colorSlider.addListener(new colorSliderListener());
-		colorSlider.hide();
+		colorSlider.setValue(50); colorSlider.addListener(new colorSliderListener()); colorSlider.hide();
 		capacitySlider = CP5.addKnob("setCapacity").setCaptionLabel("Capacity").setRange(1, 200).setPosition(150, 30).setDecimalPrecision(0).setGroup(properties);
-		capacitySlider.setValue(1);
-		capacitySlider.addListener(new capacitySliderListener());
-		capacitySlider.hide();
+		capacitySlider.setValue(1); capacitySlider.addListener(new capacitySliderListener()); capacitySlider.hide();
 		nameTextfield = CP5.addTextfield("setName").setCaptionLabel("Unique Datablock ID Name").setPosition(40, 140).setGroup(properties);
-		nameTextfield.setStringValue("untitled");
-		nameTextfield.addListener(new nameTextfieldListener());
-		nameTextfield.hide();
+		nameTextfield.setStringValue("untitled"); nameTextfield.addListener(new nameTextfieldListener()); nameTextfield.hide();
 		CP5.end();
-		generator = CP5.addGroup("RECURSIVE GRAPH GENERATOR").setBackgroundHeight(140).setBarHeight(32).setWidth(220);
+	}
+	private static void editorOptions() {
+		generator = CP5.addGroup("RECURSIVE GRAPH GENERATOR").setBackgroundHeight(140);
 		CP5.begin(10, 10);
 		CP5.addNumberbox("ITER_A").setPosition(10, 14).linebreak();
 		CP5.addNumberbox("ITER_B").setPosition(10, 38).linebreak();
@@ -175,73 +251,56 @@ public class Gui implements Serializable {
 		}
 		for (Group g : CP5.getAll(Group.class)) {
 			g.setBackgroundColor(Color.CP5_GRP);
+			g.setBarHeight(32);/*.setWidth(220)*/
 			g.getCaptionLabel().align(ControlP5.LEFT, ControlP5.CENTER).getStyle().setPaddingLeft(4);
 		}
 	}
-	public static void controlEvent(ControlEvent theEvent) {
-		if (!theEvent.isGroup()) {
-			float theValue = theEvent.getController().getValue();
-			System.out.println(theEvent.getController().getName() + "=>" + theValue);
-			switch (theEvent.getController().getName()) {
-//				case "file_quit": System.out.println("[quit]"); app.exit(); break;
-				case "file_open": App.GRAPH.rebuild(); break;
-				case "file_save": App.GRAPH.build(); break;
-//				case "file_print": app.beginRecord(P8gGraphicsSVG.SVG, "./out/svg/print-###.svg"); App.RECORDING = true; break;
-				case "view_nodes": OPT.showNodes = !OPT.showNodes; break;
-				case "view_edges": OPT.showEdges = !OPT.showEdges; break;
-				case "view_outliner": OPT.toggleOutliner(); break;
-				case "view_particles": OPT.showParticles = !OPT.showParticles; break;
-				case "view_springs": OPT.showSprings = !OPT.showSprings; break;
-				case "view_minDist": OPT.showMinDist = !OPT.showMinDist; break;
-				case "view_weights": OPT.showWeights = !OPT.showWeights; break;
-				case "view_behaviors": OPT.showBehaviors = !OPT.showBehaviors; break;
-				case "view_physInfo": OPT.showInfo = !OPT.showInfo; break;
-				case "run_physics": OPT.isUpdating = !OPT.isUpdating; break;
-				case "run_flowgraph": App.GEDIT.isUpdating = !App.GEDIT.isUpdating; break;
-
-				case "view_voronoi": showVoronoi = !showVoronoi; break;
-				case "run_voronoi": UPDATE_VORONOI = !UPDATE_VORONOI; break;
-
-				case "edit_addMinDist": App.PSYS.addMinDist(); break;
-				case "edit_addPerim": App.PSYS.addPerim(); break;
-				case "edit_rebuildMinD": App.PSYS.clearMinDist(); App.PSYS.addMinDist(); break;
-				case "edit_clearMinD": App.PSYS.clearMinDist(); break;
-				case "edit_clearPhys": App.PSYS.reset(); break;
-//				case "edit_clearAll": App.PSYS = new PSys(app); App.GRAPH.reset(); break;
-				case "world_scale": OPT.world_scale = theValue; break;
-				case "verlet_drag": OPT.PHYS_DRAG = theValue; break;
-				case "particle_scale": OPT.particleScale = theValue; break;
-				case "mindist_strength": OPT.mindistStrength = theValue; break;
-				case "particle_strength": OPT.particleWeight = theValue; break;
-				case "behavior_scale": OPT.behaviorScale = theValue; break;
-				case "behavior_strength": OPT.behaviorStrength = theValue; break;
-				case "spring_scale": OPT.springScale = theValue; break;
-				case "spring_strength": OPT.springStrength = theValue; break;
-				case "vor_perimRes": vor_perimRes = theValue; break;
-				case "vor_perimScale": vor_perimScale = theValue; break;
-				case "vor_boundsScale": vor_boundsScale = theValue; break;
-				case "psys_perimRes": psys_perimRes = theValue; break;
-				case "psys_perimRad": psys_perimRad = theValue; break;
-			}
+	static void toggleObjProperties() {
+		if (Editor.hasActiveNode()) {
+			radiusSlider.setValue(Editor.activeNode.getSize());
+			colorSlider.setValue(Editor.activeNode.getColor());
+			capacitySlider.setValue(Editor.activeNode.getOccupancy());
+			nameTextfield.setValue(Editor.activeNode.getName());
+			radiusSlider.show();
+			colorSlider.show();
+			capacitySlider.show();
+			nameTextfield.show();
+			accordion.open(3);
+		}
+		else {
+			radiusSlider.hide();
+			colorSlider.hide();
+			capacitySlider.hide();
+			nameTextfield.hide();
+			accordion.close(3);
 		}
 	}
+
 	static class nameTextfieldListener implements ControlListener {
 		String name;
-		public void controlEvent(ControlEvent e) { name = e.getController().getStringValue(); App.GEDIT.setName(name); }
+		public void controlEvent(ControlEvent e) { name = e.getController().getStringValue(); if (Editor.hasActiveNode()) Editor.activeNode.setName(name); }
 	}
 
 	static class colorSliderListener implements ControlListener {
 		float color;
-		public void controlEvent(ControlEvent e) { color = e.getController().getValue(); App.GEDIT.setColor(color); }
+		public void controlEvent(ControlEvent e) {
+			color = e.getController().getValue();
+			if (App.CP5.isMouseOver()) { for (Node n : Editor.selectedNodes) {n.setColor((int) color);} }
+		}
 	}
 
 	static class capacitySliderListener implements ControlListener {
 		float capacity;
-		public void controlEvent(ControlEvent e) { capacity = e.getController().getValue(); App.GEDIT.setOccupancy(capacity); }
+		public void controlEvent(ControlEvent e) {
+			capacity = e.getController().getValue(); if (App.CP5.isMouseOver()) { for (Node g : Editor.selectedNodes) {g.setOccupancy((int) capacity);} }
+		}
 	}
 
 	static class radiusSliderListener implements ControlListener {
 		float size;
-		public void controlEvent(ControlEvent e) { size = e.getController().getValue(); App.GEDIT.setSize(size); }
+		public void controlEvent(ControlEvent e) {
+			size = e.getController().getValue();
+			if (App.CP5.isMouseOver()) { for (Node g : Editor.selectedNodes) {g.setSize(size);} }
+		}
 	}
 }

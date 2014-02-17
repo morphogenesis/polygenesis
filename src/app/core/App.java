@@ -1,7 +1,8 @@
 package app.core;
 
-import app.graph.GEdit;
 import app.graph.Graph;
+import app.ui.Display;
+import app.ui.Editor;
 import controlP5.ControlEvent;
 import controlP5.ControlP5;
 import processing.core.PApplet;
@@ -9,6 +10,7 @@ import processing.core.PFont;
 import processing.event.MouseEvent;
 import toxi.geom.Vec2D;
 import toxi.processing.ToxiclibsSupport;
+import util.Color;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -32,15 +34,14 @@ public class App extends PApplet {
 	public static float ZOOM = 1;
 	public static float world_scale = 10;
 	public static ToxiclibsSupport GFX;
-	public static OPT CONF;
 	public static PSys PSYS;
 	public static Graph GRAPH;
-	public static GEdit GEDIT;
+	public static Editor GEDIT;
 	public static VoronoiDiagram VSYS;
 	public static ControlP5 CP5;
 	public static PFont pfont, bfont;
 	public Vec2D mousePos() {return new Vec2D(mouseX, mouseY);}
-
+	Display display = new Display(this);
 	public static void main(String[] args) {
 		PApplet.main(new String[]{("app.core.App")});
 		System.out.println("Current File  " + filepath);
@@ -54,18 +55,18 @@ public class App extends PApplet {
 		pfont = createFont("SourceCodePro", 10);
 		bfont = createFont("SourceCodePro", 14);
 		GFX = new ToxiclibsSupport(this);
-		CONF = new OPT();
 		CP5 = new ControlP5(this);
 		PSYS = new PSys(this);
 		GRAPH = new Graph();
-		GEDIT = new GEdit(this);
+		GEDIT = new Editor(this);
 		VSYS = new VoronoiDiagram(this);
 		Gui.initGUI(this);
 		size(WIDTH, HEIGHT, P2D);
 		frameRate(60);
 		smooth(16);
-		colorMode(HSB, 100, 100, 100);
-		background(0xffffffff);
+		colorMode(HSB, 360, 100, 100);
+//		background(0xffffffff);
+		background(Color.BG);
 		ellipseMode(RADIUS);
 		textAlign(LEFT);
 		textFont(pfont, 10);
@@ -74,9 +75,11 @@ public class App extends PApplet {
 		noFill();
 	}
 	public void draw() {
-		background(0xffffffff); noFill(); noStroke();
+//		background(0xffffffff);
+		background(Color.BG);
+		noFill(); noStroke();
 		VSYS.draw();
-		GEDIT.draw();
+		display.draw();
 		PSYS.draw();
 		if (RECORDING) { RECORDING = false; endRecord(); System.out.println("SVG EXPORTED SUCCESSFULLY"); }
 		CP5.draw();
@@ -86,7 +89,7 @@ public class App extends PApplet {
 		GEDIT.mouseMoved(mousePos());
 	}
 	public void mousePressed() {
-		if (mouseButton == RIGHT) { GEDIT.mousePressed(mousePos()); toggleObjProperties(); }
+		if (mouseButton == RIGHT) { GEDIT.mousePressed(mousePos()); Gui.toggleObjProperties(); }
 	}
 	public void mouseDragged() {
 		if (mouseButton == RIGHT) GEDIT.mouseDragged(mousePos());
@@ -101,51 +104,31 @@ public class App extends PApplet {
 	}
 	public void keyPressed() {
 		if (key == CODED) {
-			System.out.println(g);
 			if (keyCode == SHIFT) { isShiftDown = true; }
 			if (keyCode == CONTROL) {isCtrlDown = true;}
 		}
 		switch (key) {
-			case '1': Gui.showPolygons = !Gui.showPolygons; break;
-			case '2': Gui.showBezier = !Gui.showBezier; break;
-			case '3': Gui.showVerts = !Gui.showVerts; break;
-			case '4': OPT.showInfo = !OPT.showInfo; break;
-			case 'c': CONF.doClip = !CONF.doClip; break;
-			case 'a': GEDIT.addNodeAtCursor(Gui.nameTextfield.getStringValue(), Gui.radiusSlider.getValue(), mousePos()); toggleObjProperties(); break;
-			case 'f': GEDIT.addEdgeToSelection(); break;
-			case 'x': GEDIT.removeActiveNode(); break;
-			case 'z': GEDIT.removeActiveEdges(); break;
+			case '1': Gui.drawVorPoly = !Gui.drawVorPoly; break;
+			case '2': Gui.drawVorBez = !Gui.drawVorBez; break;
+			case '3': Gui.drawVorVec = !Gui.drawVorVec; break;
+			case '4': Gui.drawPhysInfo = !Gui.drawPhysInfo; break;
+			case 'c': Gui.doClip = !Gui.doClip; break;
+			case 'a': GEDIT.createNewNode(Gui.nameTextfield.getStringValue(), Gui.radiusSlider.getValue(), mousePos()); Gui.toggleObjProperties(); break;
+			case 'f': GEDIT.createNewEdge(); break;
+			case 'x': GEDIT.deleteNode(); break;
+			case 'z': GEDIT.deleteEdges(); break;
 
-			case 'q': GEDIT.createBranch(Gui.capacitySlider.getValue(), true); break;
-			case 'w': GEDIT.createBranch(Gui.capacitySlider.getValue(), false); break;
-			case 'l': GEDIT.freezeNode(); break;
+			case 'q': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), true); break;
+			case 'w': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), false); break;
+			case 'l': GEDIT.lockNode(); break;
 		}
 	}
 	public void keyReleased() {
 		if (key == CODED && keyCode == SHIFT) { isShiftDown = false; }
 	}
 
-	private void toggleObjProperties() {
-		if (GEDIT.hasActiveNode()) {
-			Gui.radiusSlider.setValue(GEDIT.getActiveNode().getSize());
-			Gui.colorSlider.setValue(GEDIT.getActiveNode().getColor());
-			Gui.capacitySlider.setValue(GEDIT.getActiveNode().getOccupancy());
-			Gui.nameTextfield.setValue(GEDIT.getActiveNode().getName());
-			Gui.radiusSlider.show();
-			Gui.colorSlider.show();
-			Gui.capacitySlider.show();
-			Gui.nameTextfield.show();
-			Gui.accordion.open(2);
-		} else {
-			Gui.radiusSlider.hide();
-			Gui.colorSlider.hide();
-			Gui.capacitySlider.hide();
-			Gui.nameTextfield.hide();
-			Gui.accordion.close(2);
-		}
-	}
 	public void controlEvent(ControlEvent theEvent) {
-		Gui.controlEvent(theEvent);
+		Gui.controlEvent(this, theEvent);
 	}
 }
 
