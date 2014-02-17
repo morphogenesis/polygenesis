@@ -1,7 +1,7 @@
 package app.graph;
 
 import app.core.App;
-import app.core.Settings;
+import app.core.OPT;
 import toxi.physics2d.VerletParticle2D;
 import toxi.physics2d.VerletSpring2D;
 import toxi.physics2d.behaviors.AttractionBehavior2D;
@@ -49,14 +49,15 @@ public class Graph {
 		} marshal();
 	}
 	public static void marshal() {
+		File file = new File(App.filepath);
+		File staticFile = new File(App.staticFilepath);
 		try {
-			File file = new File(App.filepath);
 			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
 			Marshaller m = jc.createMarshaller();
 			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			m.marshal(Graph.getMap(), System.out);
 			m.marshal(Graph.getMap(), file);
-//			m.marshal(Graph.getMap(), new File("./data/graphtest.xml"));
+			m.marshal(Graph.getMap(), staticFile);
 		} catch (JAXBException e) { e.printStackTrace(); }
 	}
 
@@ -66,8 +67,7 @@ public class Graph {
 		try {
 			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
 			Unmarshaller m = jc.createUnmarshaller();
-			map = (XMLmap) m.unmarshal(new File(App.filepath));
-//			map = (XMLmap) m.unmarshal(new File("./data/graphtest.xml"));
+			map = (XMLmap) m.unmarshal(new File(App.staticFilepath));
 			for (GNode n : map.getNodes()) { System.out.println(n.getId() + "::" + n.getName() + "=>" + n.getSize()); }
 			setMap(map);
 		} catch (JAXBException e) { e.printStackTrace(); } return map;
@@ -79,7 +79,7 @@ public class Graph {
 		App.PSYS.reset();
 		edgeIndex = new HashMap<>();
 		nodeIndex = new HashMap<>();
-		Settings X = App.CONF;
+		OPT X = App.CONF;
 		for (GNode n : Map.getNodes()) {
 			n.setParticle2D(new VerletParticle2D(n.getX(), n.getY()));
 			n.setBehavior2D(new AttractionBehavior2D(n.getParticle2D(), n.getRadius(), -1));
@@ -88,6 +88,8 @@ public class Graph {
 			nodeIndex.put(n.getId(), n);
 			App.PSYS.addParticle(n);
 		} for (GEdge e : Map.getEdges()) {
+			e.setNodeA(getNode(e.getFrom()));
+			e.setNodeB(getNode(e.getTo()));
 			e.setSpring2D(new VerletSpring2D(e.getNodeA().getParticle2D(), e.getNodeB().getParticle2D(), e.getLength(), 0.001f));
 			e.update(X.springStrength, X.springScale);
 			edges.add(e);

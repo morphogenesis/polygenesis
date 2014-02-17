@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <flowgraph>
-    <node id="0" name="untitled" size="50.0" occupancy="0" color="100" x="855.0" y="406.0"/>
-    <node id="1" name="untitled" size="50.0" occupancy="0" color="100" x="829.0" y="348.0"/>
+    <node id="0" name="untitled" size="50.0" occupancy="0" color="100" x="538.0" y="397.0"/>
+    <node id="1" name="untitled" size="50.0" occupancy="0" color="100" x="639.0" y="389.0"/>
+    <rel from="1" to="0"/>
 </flowgraph>

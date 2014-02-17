@@ -6,7 +6,6 @@ import app.graph.Graph;
 import processing.core.PApplet;
 import toxi.geom.Polygon2D;
 import toxi.geom.Rect;
-import toxi.geom.Spline2D;
 import toxi.geom.Vec2D;
 import toxi.physics2d.VerletMinDistanceSpring2D;
 import toxi.physics2d.VerletParticle2D;
@@ -28,9 +27,9 @@ public class PSys {
 	private List<VerletSpring2D> springs;
 	private List<VerletSpring2D> minDistSprings;
 	private List<AttractionBehavior2D> behaviors;
-	private List<VerletParticle2D> particles;
+	private ArrayList<VerletParticle2D> particles;
 	private HashMap<String, String> info;
-	private Settings X;
+	private OPT X;
 	private App p5;
 	public PSys(App p5) {
 		this.p5 = p5;
@@ -56,8 +55,9 @@ public class PSys {
 		if (X.showWeights) { for (VerletParticle2D a : physics.particles) { p5.ellipse(a.x, a.y, a.getWeight(), a.getWeight()); } }
 		p5.stroke(0xff343434); p5.noFill();
 		if (X.showBehaviors) { for (AttractionBehavior2D a : behaviors) { Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius()); } }
+		if (X.showBehaviors) { for (AttractionBehavior2D a : perimeter) { Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius()); } }
 		p5.fill(0xff666666);
-		if (X.showInfo) {
+		if (OPT.showInfo) {
 			p5.pushMatrix(); p5.translate(300, 30);
 			for (String key : info.keySet()) {
 				p5.translate(0, 10); p5.textAlign(PApplet.LEFT); p5.text(key, -50, 0);
@@ -123,23 +123,24 @@ public class PSys {
 		springs.remove(e.getSpring2D());
 		physics.removeSpring(e.getSpring2D());
 	}
-	public void addPerim(int res, int step) {
-		Polygon2D rect = physics.getWorldBounds().toPolygon2D();
-		Spline2D s = new Spline2D(rect.vertices);
-		for (Vec2D v : s.toLineStrip2D(res).getDecimatedVertices(step)) {
-//			VerletParticle2D p = new VerletParticle2D(v, mass);
+
+	public void clearMinDist() { for (VerletSpring2D s : minDistSprings) { physics.springs.remove(s); } minDistSprings.clear();}
+	public void reset() {springs.clear(); minDistSprings.clear(); particles.clear(); behaviors.clear(); physics.clear();}
+	public void addPerim() {
+		Rect r = new Rect(0, 0, App.WIDTH, App.HEIGHT);
+		Polygon2D polyRect = r.toPolygon2D().increaseVertexCount((int) OPT.psys_perimRes);
+		for (Vec2D v : polyRect.vertices) {
+			VerletParticle2D p = new VerletParticle2D(v, 1);
 			AttractionBehavior2D a = new AttractionBehavior2D(v, 200, -1);
 //			p.lock();
-//			physics.addParticle(p);
+			physics.addParticle(p);
 			physics.addBehavior(a);
 			perimeter.add(a);
 		}
 	}
-	public void clearMinDist() { for (VerletSpring2D s : minDistSprings) { physics.springs.remove(s); } minDistSprings.clear();}
-	public void reset() {springs.clear(); minDistSprings.clear(); particles.clear(); behaviors.clear(); physics.clear();}
-
 	public VerletPhysics2D getPhysics() { return physics; }
 	public Rect getBounds() { return bounds; }
 	public float getDrag() {return physics.getDrag();}
+	public ArrayList<VerletParticle2D> getParticles() { return particles; }
 }
 

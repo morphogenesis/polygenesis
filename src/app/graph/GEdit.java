@@ -1,7 +1,7 @@
 package app.graph;
 
 import app.core.App;
-import app.core.Settings;
+import app.core.OPT;
 import processing.core.PApplet;
 import toxi.geom.Circle;
 import toxi.geom.Vec2D;
@@ -20,15 +20,15 @@ public class GEdit {
 	private ArrayList<GNode> lockedNodes = new ArrayList<>();
 	private ArrayList<GEdge> adjacentEdges = new ArrayList<>();
 	private App p5;
-	private Settings X;
+	private OPT X;
 	private Graph graph;
 	public GEdit(App p5) {this.p5 = p5; this.graph = App.GRAPH; this.X = App.CONF;}
 
 	public void draw() {
 		p5.noFill(); p5.noStroke();
 		for (GEdge e : graph.edges) {
-			e.update(X.springStrength, X.springScale);
-			if (X.showEdges) {
+			e.update(OPT.springStrength, OPT.springScale);
+			if (OPT.showEdges) {
 				EdgeGfx fx = new EdgeGfx(p5, e);
 				fx.draw();
 
@@ -37,19 +37,19 @@ public class GEdit {
 		}
 
 		for (GNode n : graph.nodes) {
-			n.update(X.particleWeight, X.behaviorScale, X.behaviorStrength);
+			n.update(OPT.particleWeight, OPT.behaviorScale, OPT.behaviorStrength);
 			NodeTag t = new NodeTag(p5, n);
-			if (X.showOutliner) { t.drawListing(); }
-			if (X.showNodes) {
+			if (OPT.drawOutliner) { t.drawListing(); }
+			if (OPT.showNodes) {
 				t.draw();
-				if (X.showInfo) { t.drawNametag();}
+				if (OPT.showInfo) { t.drawNametag();}
 				if (n == activeNode) t.drawActive();
 				if (n == hoveredNode) t.drawHovered();
 				if (selectedNodes.contains(n)) t.drawSelected();
 			}
 		}
 
-		if (X.showOutliner) { drawOutliner(); }
+		if (OPT.drawOutliner) { drawOutliner(); }
 	}
 	private void drawOutliner() {
 		p5.noFill(); p5.noStroke();
@@ -61,9 +61,9 @@ public class GEdit {
 		p5.text("NAME", 10, -2);
 		p5.textAlign(PApplet.RIGHT);
 		p5.text("AREA", 100, -2);
-		p5.textFont(p5.bfont, 14);
+		p5.textFont(App.bfont, 14);
 		p5.text("Total Area: " + App.DF1.format(totalSize) + " sq.m", xx + 100, 30);
-		p5.textFont(p5.pfont, 10);
+		p5.textFont(App.pfont, 10);
 	}
 	private void selectNodeNearPosition(Vec2D mousePos) {
 		if (!App.isShiftDown) clearSelection();
@@ -193,7 +193,7 @@ public class GEdit {
 	public Graph getGraph() {
 		return graph;
 	}
-	public Settings getX() {
+	public OPT getX() {
 		return X;
 	}
 }

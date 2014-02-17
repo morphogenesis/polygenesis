@@ -1,6 +1,7 @@
 package app.graph;
 
 import app.core.App;
+import app.core.OPT;
 import toxi.physics2d.VerletParticle2D;
 import toxi.physics2d.behaviors.AttractionBehavior2D;
 import util.Color;
@@ -34,7 +35,7 @@ public class GNode {
 	@XmlTransient
 	private AttractionBehavior2D behavior2D;
 	public void draw(App p5) {
-		float r = (float) ((Math.sqrt(getSize() / Math.PI)) * App.CONF.particleScale * App.world_scale);
+		float r = (float) ((Math.sqrt(getSize() / Math.PI)) * OPT.particleScale * App.world_scale);
 		setRadius(r);
 		String name = getName();
 		int size = (int) getSize();
@@ -48,7 +49,7 @@ public class GNode {
 		p5.ellipse(x, y, r, r);
 	}
 	public void update(float weight, float scale, float strength) {
-		float r = (float) ((Math.sqrt(getSize() / Math.PI)) * App.CONF.particleScale * App.world_scale);
+		float r = (float) ((Math.sqrt(getSize() / Math.PI)) * OPT.particleScale * App.world_scale);
 		setRadius(r);
 		VerletParticle2D v = getParticle2D();
 		v.setWeight(weight);
