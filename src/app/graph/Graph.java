@@ -20,9 +20,11 @@ public class Graph {
 	private static XMLmap Map = new XMLmap();
 	private static HashMap<Integer, Node> nodeIndex = new HashMap<>();
 	private static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
-	public static ArrayList<Node> nodes = new ArrayList<>();
-	public static ArrayList<Edge> edges = new ArrayList<>();
-
+	public static ArrayList<Node> nodes;
+	public static ArrayList<Edge> edges;
+	public Graph() {
+		nodes = new ArrayList<>(); edges = new ArrayList<>();
+	}
 	public void build() {
 		Map = new XMLmap();
 		Map.setNodes(nodes);
@@ -98,9 +100,18 @@ public class Graph {
 		build();
 	}
 	public void removeNode(Node n) {
+		int id = n.getId();
+		int num = Node.getNumberOfGNodes();
+		Node.setNumberOfGNodes(num - 1);
 		nodes.remove(n);
 		nodeIndex.remove(n.getId());
 		App.PSYS.removeParticle(n);
+		for (Node na : nodes) {
+			int naId = na.getId();
+			if (naId > id) {
+				na.setId(naId - 1);
+			}
+		}
 	}
 	public void removeEdges(ArrayList<Edge> edges) { for (Edge e : edges) { removeEdge(e); } }
 	public void removeEdge(Edge e) {
@@ -109,7 +120,14 @@ public class Graph {
 		App.PSYS.removeSpring(e);
 		build();
 	}
-
+	public Edge getEdge(Node a, Node b) {
+		for (Edge e : Graph.edges) { if ((e.getA() == a && e.getB() == b) || (e.getA() == b && e.getB() == a)) { return e; } }
+		return null;
+	}
+	public Graph addEdgeTwo(Edge s) {
+		if (getEdge(s.getA(), s.getB()) == null) { addEdge(s); }
+		return this;
+	}
 	public static XMLmap getMap() { return Map; }
 	public static Node getNode(int id) {return nodeIndex.get(id);}
 	public static void setMap(XMLmap Map) { Graph.Map = Map; }

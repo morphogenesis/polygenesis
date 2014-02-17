@@ -33,12 +33,12 @@ public class Edge {
 		this.b = b;
 		this.from = (a.getId());
 		this.to = (b.getId());
-		this.spring2D = new VerletSpring2D(a.getParticle2D(), b.getParticle2D(), getLength() * Gui.springScale, Gui.springStrength);
+		this.spring2D = new VerletSpring2D(a.getParticle2D(), b.getParticle2D(), getLength() * Gui.physSprScale, Gui.physSprStr);
 	}
 
 	public void update() {
-		spring2D.setStrength(Gui.springStrength);
-		spring2D.setRestLength(getLength() * Gui.springScale);
+		spring2D.setStrength(Gui.physSprStr);
+		spring2D.setRestLength(getLength() * Gui.physSprScale);
 	}
 	public VerletSpring2D getSpring2D() { return spring2D; }
 	public void setSpring2D(VerletSpring2D spring2D) { this.spring2D = spring2D; }

@@ -64,7 +64,7 @@ public class App extends PApplet {
 		size(WIDTH, HEIGHT, P2D);
 		frameRate(60);
 		smooth(16);
-		colorMode(HSB, 360, 100, 100);
+		colorMode(HSB, 360, 100, 100, 100);
 //		background(0xffffffff);
 		background(Color.BG);
 		ellipseMode(RADIUS);
@@ -79,8 +79,8 @@ public class App extends PApplet {
 		background(Color.BG);
 		noFill(); noStroke();
 		VSYS.draw();
-		display.draw();
 		PSYS.draw();
+		display.draw();
 		if (RECORDING) { RECORDING = false; endRecord(); System.out.println("SVG EXPORTED SUCCESSFULLY"); }
 		CP5.draw();
 	}
@@ -117,7 +117,6 @@ public class App extends PApplet {
 			case 'f': GEDIT.createNewEdge(); break;
 			case 'x': GEDIT.deleteNode(); break;
 			case 'z': GEDIT.deleteEdges(); break;
-
 			case 'q': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), true); break;
 			case 'w': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), false); break;
 			case 'l': GEDIT.lockNode(); break;

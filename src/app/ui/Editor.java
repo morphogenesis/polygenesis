@@ -30,7 +30,7 @@ public class Editor {
 	}
 	public void createNewBranch(float num, boolean split) {
 		if (hasActiveNode()) {
-			Node parent = Editor.activeNode;
+			Node parent = activeNode;
 			float size = parent.getSize();
 			for (int i = 1; i <= num; i++) {
 				Vec2D pos = Vec2D.fromTheta(i * PApplet.TWO_PI / num).scaleSelf(size).addSelf(parent.getParticle2D());
@@ -43,8 +43,13 @@ public class Editor {
 	}
 	public void createNewEdge() {
 		for (Node n : selectedNodes) {
-			graph.addEdge(new Edge(activeNode, n));
+			Edge e = new Edge(n, activeNode);
+			graph.addEdgeTwo(e);
+//			if ((s.a == a && s.b == b) || (s.a == b && s.b == a)) {
+//				graph.addEdge(new Edge(activeNode, n));}
+
 		}
+//		for
 		/*if (selectedNodes.size() >= 2) {
 			for (Node a : selectedNodes)
 				Node na = selectedNodes.get(0);
@@ -60,18 +65,16 @@ public class Editor {
 		for (Node n : Graph.nodes) { if (c.containsPoint(n.getParticle2D())) { hoveredNode = n; break; } }
 	}
 	void selectNodeNearPosition(Vec2D mousePos) {
-//		else { deselectNode(); }
+		if (!App.isShiftDown) { clearSelection(); }
+		else if (hasActiveNode()) {selectedNodes.add(activeNode); deselectNode(); }
 		for (Node n : Graph.nodes) {
 			Circle c = new Circle(n.getX(), n.getY(), 20);
 			if (c.containsPoint(mousePos)) { setActiveNode(n); break; }
-//			else { deselectNode(); }
+			else { deselectNode(); }
 		}
 	}
 	void setActiveNode(Node n) {
-		if (selectedNodes.contains(n)) {selectedNodes.remove(n);}
-		if ((App.isShiftDown) && (hasActiveNode())) { selectedNodes.add(activeNode); activeNode = n; selectedNodes.remove(activeNode); }
-		else {clearSelection(); activeNode = n; }
-		//		activeNode = n;//		selectedNodes.add(n);
+		activeNode = n;
 		System.out.println("num" + n.getId());
 		selectAdjacentEdges();
 	}
@@ -112,10 +115,8 @@ public class Editor {
 
 	public void deleteEdges() {graph.removeEdges(adjacentEdges); deselectEdges(); }
 	public void lockNode() {
-		for (Node n : selectedNodes) {
-			if (lockedNodes.contains(n)) { lockedNodes.remove(n); n.getParticle2D().unlock(); }
-			else { n.getParticle2D().lock(); lockedNodes.add(n); }
-		}
+		if (lockedNodes.contains(activeNode)) { lockedNodes.remove(activeNode); activeNode.getParticle2D().unlock(); }
+		else { activeNode.getParticle2D().lock(); lockedNodes.add(activeNode); }
 	}
 	public void deleteNode() {
 		while (hasActiveNode()) {

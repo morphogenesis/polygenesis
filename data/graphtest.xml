@@ -1,10 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <flowgraph>
-    <node id="1" name="untitled" size="50.0" occupancy="0" color="90" x="691.4664" y="337.38962"/>
-    <node id="2" name="untitled" size="50.0" occupancy="0" color="180" x="731.74866" y="268.48334"/>
-    <node id="3" name="untitled" size="50.0" occupancy="0" color="270" x="866.98083" y="264.26956"/>
-    <node id="4" name="untitled" size="50.0" occupancy="0" color="360" x="873.00494" y="339.55957"/>
-    <rel from="1" to="2"/>
-    <rel from="1" to="2"/>
-    <rel from="3" to="4"/>
+    <node id="1" name="untitled" size="38.0" occupancy="0" color="18" x="659.9636" y="262.5971"/>
+    <node id="2" name="untitled" size="226.0" occupancy="0" color="36" x="766.76154" y="466.3568"/>
+    <node id="3" name="untitled" size="50.0" occupancy="0" color="54" x="883.53546" y="417.02884"/>
+    <node id="4" name="untitled1" size="62.254086" occupancy="0" color="72" x="811.0903" y="590.1227"/>
+    <node id="5" name="untitled2" size="20.254086" occupancy="0" color="90" x="653.4518" y="487.80258"/>
+    <node id="6" name="untitled3" size="160.25409" occupancy="0" color="108" x="641.315" y="368.85193"/>
+    <node id="7" name="untitled6" size="62.254086" occupancy="0" color="126" x="842.29443" y="360.09595"/>
+    <node id="8" name="untitled7" size="35.254086" occupancy="0" color="144" x="887.75024" y="479.89102"/>
+    <node id="9" name="untitled" size="14.254086" occupancy="0" color="162" x="437.97607" y="364.09317"/>
+    <node id="10" name="untitled" size="86.25409" occupancy="0" color="180" x="514.49023" y="366.29034"/>
+    <node id="11" name="untitled" size="35.254086" occupancy="0" color="198" x="555.38367" y="441.84872"/>
+    <node id="12" name="untitled" size="15.254086" occupancy="0" color="216" x="833.93835" y="654.07684"/>
+    <node id="13" name="untitled" size="12.254086" occupancy="0" color="234" x="870.5086" y="633.89307"/>
+    <node id="14" name="untitled" size="35.254086" occupancy="0" color="252" x="889.4238" y="546.90094"/>
+    <node id="15" name="untitled" size="14.254086" occupancy="0" color="270" x="935.5149" y="452.65244"/>
+    <node id="16" name="untitled" size="15.254086" occupancy="0" color="288" x="445.00134" y="321.3572"/>
+    <node id="17" name="untitled" size="13.254086" occupancy="0" color="306" x="440.27844" y="405.85324"/>
+    <node id="18" name="untitled" size="35.254086" occupancy="0" color="324" x="882.9954" y="293.45868"/>
+    <node id="19" name="untitled" size="20.254086" occupancy="0" color="342" x="603.9153" y="475.24304"/>
+    <rel from="3" to="2"/>
+    <rel from="2" to="4"/>
+    <rel from="2" to="5"/>
+    <rel from="2" to="6"/>
+    <rel from="2" to="9"/>
+    <rel from="2" to="10"/>
+    <rel from="1" to="6"/>
+    <rel from="11" to="10"/>
+    <rel from="19" to="10"/>
+    <rel from="13" to="14"/>
+    <rel from="13" to="4"/>
+    <rel from="19" to="8"/>
+    <rel from="17" to="10"/>
+    <rel from="11" to="6"/>
+    <rel from="12" to="11"/>
+    <rel from="16" to="9"/>
+    <rel from="19" to="11"/>
+    <rel from="19" to="5"/>
+    <rel from="14" to="8"/>
 </flowgraph>

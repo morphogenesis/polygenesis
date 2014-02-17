@@ -38,26 +38,37 @@ public class Gui implements Serializable {
 	public static boolean drawVorPoly = true;
 	public static boolean drawVorBez;
 	public static boolean drawVorVec;
+	public static boolean drawVorInfo;
 
 	public static boolean doClip;
 
-	public static float world_scale;
-	public static float particleScale = 1;
-	public static float particleWeight = 0.5f;
-	public static float particlePadding = 0.1f;
-	public static float behaviorScale = 2f;
-	public static float behaviorStrength = -0.3f;
-	public static float springScale = 1;
-	public static float springStrength = 0.001f;
-	public static float mindistStrength = 0.001f;
-	public static float PHYS_DRAG;
-	public static float psys_boundsScale;
-	public static float psys_perimRad = 100;
-	public static float psys_perimRes = 100;
+	public static float world_scale = 10;
+
+	public static float physDrag = 0.3f;
+	public static float physPtclScale = 1;
+	public static float physSprScale = 1;
+	public static float physBhvScale = 1.5f;
+	public static float physPtclWght = 1f;
+	public static float physBhvStr = -0.3f;
+	public static float physSprStr = 0.001f;
+	public static float physMindistStr = 0.01f;
+
+	public static float cloudBhvStr = -1;
+	public static float cloudBhvScale = 100;
+	public static float cloudPtclWght = .5f;
+	public static float cloudMindistScale = 100;
+	public static float cloudMindStr = -1;
+
 	public static float vor_perimRes = 10;
-	public static float vor_perimScale = 1;
-	public static float vor_boundsScale = 1;
+	public static float vor_ringScale = 1;
+	public static float vor_rectScale = 1;
+	public static float vor_intersectorScale = 1;
 	public static float vor_clipScale = 1;
+	static ControlWindow controlWindow;
+
+//	public static float particlePadding = 0.1f;
+//	public static float psys_boundsScale;
+
 	public static void controlEvent(App app, ControlEvent theEvent) {
 		if (!theEvent.isGroup()) {
 			float theValue = theEvent.getController().getValue();
@@ -77,7 +88,7 @@ public class Gui implements Serializable {
 				case "view_weights": drawPhysWeights = !drawPhysWeights; break;
 				case "view_behaviors": drawPhysBehaviors = !drawPhysBehaviors; break;
 				case "view_voronoi": drawVoronoi = !drawVoronoi; break;
-
+				case "view_vorInfo": drawVorInfo = !drawVorInfo; break;
 				case "view_physInfo": drawPhysInfo = !drawPhysInfo; break;
 
 				case "run_physics": updatePhysics = !updatePhysics; break;
@@ -85,30 +96,35 @@ public class Gui implements Serializable {
 				case "run_voronoi": updateVoronoi = !updateVoronoi; break;
 
 				case "edit_addMinDist": App.PSYS.addMinDist(); break;
+				case "edit_addCloudMinDist": App.PSYS.addCloudMinDist(); break;
 				case "edit_addPerim": App.PSYS.addPerim(); break;
 				case "edit_rebuildMinD": App.PSYS.clearMinDist(); App.PSYS.addMinDist(); break;
 				case "edit_clearMinD": App.PSYS.clearMinDist(); break;
 				case "edit_clearPhys": App.PSYS.reset(); break;
 //				case "edit_clearAll": App.PSYS = new PSys(app); App.GRAPH.reset(); break;
 				case "world_scale": world_scale = theValue; break;
-				case "verlet_drag": PHYS_DRAG = theValue; break;
-				case "particle_scale": particleScale = theValue; break;
-				case "mindist_strength": mindistStrength = theValue; break;
-				case "particle_strength": particleWeight = theValue; break;
-				case "behavior_scale": behaviorScale = theValue; break;
-				case "behavior_strength": behaviorStrength = theValue; break;
-				case "spring_scale": springScale = theValue; break;
-				case "spring_strength": springStrength = theValue; break;
+				case "verlet_drag": physDrag = theValue; break;
+				case "particle_scale": physPtclScale = theValue; break;
+				case "mindist_strength": physMindistStr = theValue; break;
+				case "particle_strength": physPtclWght = theValue; break;
+				case "behavior_scale": physBhvScale = theValue; break;
+				case "behavior_strength": physBhvStr = theValue; break;
+				case "spring_scale": physSprScale = theValue; break;
+				case "spring_strength": physSprStr = theValue; break;
 				case "vor_perimRes": vor_perimRes = theValue; break;
-				case "vor_perimScale": vor_perimScale = theValue; break;
-				case "vor_boundsScale": vor_boundsScale = theValue; break;
-				case "psys_perimRes": psys_perimRes = theValue; break;
-				case "psys_perimRad": psys_perimRad = theValue; break;
+				case "vor_clipScale": vor_clipScale = theValue; break;
+				case "vor_ringScale": vor_ringScale = theValue; break;
+				case "vor_rectScale": vor_rectScale = theValue; break;
+				case "vor_intersectorScale": vor_intersectorScale = theValue; break;
+/*				case "cloudBhvScale": cloudBhvScale = theValue; break;
+				case "cloudBhvStr": cloudBhvStr = theValue; break;
+				case "cloudMindStr": cloudMindStr = theValue; break;
+				case "cloudMindistScale": cloudMindistScale = theValue; break;
+				case "cloudPtclWght": cloudPtclWght = theValue; break;*/
 			}
 		}
 	}
 	public static void initGUI(App app) {
-
 		CP5.enableShortcuts();
 		CP5.setAutoDraw(false);
 		CP5.setFont(App.pfont, 10);
@@ -126,29 +142,32 @@ public class Gui implements Serializable {
 		accordion.open(0, 1);
 	}
 	public static void initGuiPhysProperties(App app) {
-		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(236);
+		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(224);
 		CP5.begin(10, 10);
 		CP5.addSlider("world_scale").setRange(1, 20).setDecimalPrecision(0).linebreak().setGroup(physConfig);
 		CP5.addSlider("verlet_drag").setValue(0.32f).setRange(0.1f, 1).setDecimalPrecision(2).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_scale").setValue(particleScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("spring_scale").setValue(springScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_scale").setValue(behaviorScale).setRange(0, 7).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_strength").setValue(particleWeight).setRange(0.1f, 5).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_strength").setValue(behaviorStrength).setRange(-5f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
-		CP5.addSlider("spring_strength").setValue(springStrength).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physConfig);
-		CP5.addSlider("mindist_strength").setValue(mindistStrength).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("particle_scale").setValue(physPtclScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("spring_scale").setValue(physSprScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("behavior_scale").setValue(physBhvScale).setRange(0, 7).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("particle_strength").setValue(physPtclWght).setRange(0.1f, 5).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("behavior_strength").setValue(physBhvStr).setRange(-5f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("spring_strength").setValue(physSprStr).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physConfig);
+		CP5.addSlider("mindist_strength").setValue(physMindistStr).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+/*		CP5.addSlider("cloudBhvScale").setValue(cloudBhvScale).setRange(10, 500).setDecimalPrecision(0).linebreak().setGroup(physConfig);
+		CP5.addSlider("cloudBhvStr").setValue(cloudBhvStr).setRange(-1f, 1).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("cloudPtclWght").setValue(cloudPtclWght).setRange(.1f, 2).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("cloudMindStr").setValue(cloudMindStr).setRange(.01f, 5).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("cloudMindistScale").setValue(cloudMindistScale).setRange(20, 500).setDecimalPrecision(2).linebreak().setGroup(physConfig);*/
 		CP5.end();
 	}
 	private static void voronoiOptions() {
 		vorConfig = CP5.addGroup("VORONOI SETTINGS").setBackgroundHeight(164);
 		CP5.begin(10, 10);
-		CP5.addSlider("psys_perimRes").setValue(psys_perimRes).setRange(50, 300).setDecimalPrecision(0).setGroup(vorConfig).linebreak();
-		CP5.addSlider("psys_perimRad").setValue(psys_perimRad).setRange(10, 300).setDecimalPrecision(0).setGroup(vorConfig).linebreak();
 		CP5.addSlider("vor_perimRes").setValue(vor_perimRes).setRange(4, 20).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_perimScale").setValue(vor_perimScale).setRange(.1f, 2f).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_boundsScale").setValue(vor_boundsScale).setRange(1, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_clipScale").setValue(vor_clipScale).setRange(1, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
-
+		CP5.addSlider("vor_ringScale").setValue(vor_ringScale).setRange(.1f, 10).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
+		CP5.addSlider("vor_rectScale").setValue(vor_rectScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
+		CP5.addSlider("vor_intersectorScale").setValue(vor_intersectorScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
+		CP5.addSlider("vor_clipScale").setValue(vor_clipScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
 		CP5.end();
 	}
 	public static void initGuiObProperties(App app) {
@@ -189,6 +208,7 @@ public class Gui implements Serializable {
 		view = mainMenu.add("View", 2);
 		view.setWidth(130).setHeight(20);
 		view.add("view_physInfo", 26).setCaptionLabel("Info");
+		view.add("view_vorInfo", 26).setCaptionLabel("Info");
 		view.add("view_outliner", 25).setCaptionLabel("Outliner");
 		view.add("view_voronoi", 24).setCaptionLabel("Voronoi");
 		view.add("view_nodes", 21).setCaptionLabel("Nodes");
@@ -209,6 +229,7 @@ public class Gui implements Serializable {
 		edit = mainMenu.add("Edit", 4);
 		edit.setWidth(130).setHeight(20);
 		edit.add("edit_addMinDist", 41).setCaptionLabel("Add MinDist");
+		edit.add("edit_addCloudMinDist", 41).setCaptionLabel("Add CloudMinDist");
 		edit.add("edit_addPerim", 41).setCaptionLabel("Add Perim");
 		edit.add("edit_rebuildMinD", 42).setCaptionLabel("Rebuild MinDist");
 		edit.add("edit_clearMinD", 43).setCaptionLabel("Clear MinDist");

@@ -32,31 +32,38 @@ public class Node {
 	private VerletParticle2D particle2D;
 	@XmlTransient
 	private AttractionBehavior2D behavior2D;
+	public static void setNumberOfGNodes(int numberOfGNodes) {
+		Node.numberOfGNodes = numberOfGNodes;
+	}
 	@XmlTransient
 	private static int numberOfGNodes = 0;
 
 	public Node() {
 		this.particle2D = new VerletParticle2D(this.x, this.y);
-		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.behaviorScale, -1);
+		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.physBhvScale, -1);
 		++numberOfGNodes;
 	}
-
 	public Node(String name, float size, Vec2D pos) {
+		this(name, size, pos, 10);
+		this.color = 10 + (20 * getId());
+	}
+	public Node(String name, float size, Vec2D pos, int color) {
+
 		this.id = ++numberOfGNodes;
 		this.name = name;
 		this.size = size;
 		this.x = pos.x;
 		this.y = pos.y;
-		this.color = (int) (360 / numberOfGNodes) * this.id;
+		this.color = color;
 		this.particle2D = new VerletParticle2D(pos);
-		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.behaviorScale, -1);
+		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.physBhvScale, -1);
 	}
 	public void update() {
-		particle2D.setWeight(Gui.particleWeight);
+		particle2D.setWeight(Gui.physPtclWght);
 		x = particle2D.x;
 		y = particle2D.y;
-		behavior2D.setRadius(getRadius() * Gui.behaviorScale);
-		behavior2D.setStrength(Gui.behaviorStrength);
+		behavior2D.setRadius(getRadius() * Gui.physBhvScale);
+		behavior2D.setStrength(Gui.physBhvStr);
 		color = (int) (360 / numberOfGNodes) * this.id;
 	}
 	public static int getNumberOfGNodes() {return numberOfGNodes;}
@@ -74,7 +81,7 @@ public class Node {
 	public void setParticle2D(VerletParticle2D particle2D) { this.particle2D = particle2D;}
 	public AttractionBehavior2D getBehavior2D() { return behavior2D; }
 	public void setBehavior2D(AttractionBehavior2D behavior2D) { this.behavior2D = behavior2D; }
-	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.particleScale * App.world_scale); }
+	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.physPtclScale * App.world_scale); }
 	public int getOccupancy() { return occupancy; }
 	public void setOccupancy(int occupancy) { this.occupancy = occupancy; }
 	public int getColor() { return color; }
