@@ -18,8 +18,9 @@ public class Display {
 	public Display(App p5) { this.p5 = p5; }
 
 	public void draw() {
-		drawEdges();
-		drawNodes();
+		App.GRAPH.update();
+		if (Gui.drawGraphNodes) { drawEdges();}
+		if (Gui.drawGraphEdges) { drawNodes(); }
 		if (Gui.drawGraphOutline) { drawOutliner(); }
 	}
 
@@ -27,35 +28,29 @@ public class Display {
 		p5.noFill();
 		p5.noStroke();
 		for (Edge e : Graph.edges) {
-			e.update();
-			if (Gui.drawGraphEdges) {
-				EdgeGfx fx = new EdgeGfx(p5, e);
-				fx.draw();
-
-				if (Editor.adjacentEdges.contains(e)) fx.drawActive();
-			}
+			EdgeGfx gfx = new EdgeGfx(p5, e);
+			gfx.draw();
+			if (Editor.adjacentEdges.contains(e)) gfx.drawActive();
 		}
 	}
 
 	private void drawNodes() {
 		p5.noFill();
 		p5.noStroke();
-		for (Node n : Graph.getMap().getNodes()) {
+		for (Node n : Graph.nodes) {
 			n.update();
-			NodeTag t = new NodeTag(p5, n);
+			NodeGfx t = new NodeGfx(p5, n);
 			if (Gui.drawGraphOutline) { t.drawListing(); }
-			if (Gui.drawGraphNodes) {
-				t.draw();
-				if (Gui.drawPhysInfo) { t.drawNametag();}
-				if (n == Editor.activeNode) t.drawActive();
-				if (n == Editor.hoveredNode) t.drawHovered();
-				if (Editor.selectedNodes.contains(n)) t.drawSelected();
-				if (Editor.lockedNodes.contains(n)) t.drawLocked();
-			}
+			t.draw();
+			if (Gui.drawPhysInfo) { t.drawNametag();}
+			if (n == Editor.activeNode) t.drawActive();
+			if (n == Editor.hoveredNode) t.drawHovered();
+			if (Editor.selectedNodes.contains(n)) t.drawSelected();
+			if (Editor.lockedNodes.contains(n)) t.drawLocked();
 		}
 	}
 
-	public void drawOutliner() {
+	private void drawOutliner() {
 		p5.noFill(); p5.noStroke();
 		float totalSize = 0;
 		int xx = App.WIDTH - 120;
@@ -70,20 +65,26 @@ public class Display {
 		p5.textFont(App.pfont, 10);
 	}
 
-	public static class NodeTag {
+	private static class NodeGfx {
 		App p5;
 		Node n;
 		float y;
 		float x;
 		float r;
-		public NodeTag(App p5, Node n) {
+		int xMax;
+		float xPos;
+		int yPos;
+		public NodeGfx(App p5, Node n) {
 			this.p5 = p5;
 			this.n = n;
 			this.x = n.getX();
 			this.y = n.getY();
 			this.r = n.getRadius();
+			this.xMax = App.WIDTH - 200;
+			this.xPos = x + r;
+			this.yPos = 50 + (n.getId() * 14);
 		}
-		public void draw() {
+		private void draw() {
 			p5.noFill(); p5.stroke(n.getColor(), 100, 100, 100);
 			p5.ellipse(x, y, r + 1, r + 1);
 //			p5.stroke(0xff999999); p5.strokeWeight(1);
@@ -91,7 +92,7 @@ public class Display {
 			p5.fill(n.getColor(), 100, 100, 100); p5.stroke(0xff1d1d1d);
 			p5.ellipse(x, y, 5, 5);
 		}
-		public void drawNametag() {
+		private void drawNametag() {
 //			float x = r * App.cos(theta);
 
 			p5.fill(0xff333333);
@@ -109,86 +110,74 @@ public class Display {
 			p5.fill(n.getColor(), 100, 100);
 			p5.text(n.getId(), 372, y + 12);
 		}
-		public void drawListing() {
-			int xPos = App.WIDTH - 200;
-			int yPos = 50 + (n.getId() * 14);
+		private void drawListing() {
+
 			p5.noFill();
 			p5.stroke(0xff444444);
-			p5.line(x + r, y, xPos - 100, y);
-			p5.line(xPos - 100, y, xPos - 20, yPos + 7);
-			p5.line(xPos - 20, yPos + 7, xPos, yPos + 7);
-			//		p5.bezier(xPos, yPos, xPos-100, yPos, xPos, y, x+r, y);
+			p5.line(x + r, y, xMax - 100, y);
+			p5.line(xMax - 100, y, xMax - 20, yPos + 7);
+			p5.line(xMax - 20, yPos + 7, xMax, yPos + 7);
+			//		p5.bezier(xMax, yPos, xMax-100, yPos, xMax, y, x+r, y);
 			p5.noStroke();
 			if (n.getId() % 2 == 0) { p5.fill(0xff2b2b2b); }
 			else { p5.fill(0xff333333); }
-			p5.rect(xPos - 10, yPos + 1, 160, 12);
+			p5.rect(xMax - 10, yPos + 1, 160, 12);
 
 			p5.fill(0xff333333);
 			p5.stroke(n.getColor(), 100, 100);
-			p5.ellipse(xPos - 14, yPos + 7, 3, 3);
+			p5.ellipse(xMax - 14, yPos + 7, 3, 3);
 			p5.noStroke();
 			p5.fill(0xff666666);
-			p5.rect(xPos + 100, yPos + 1, 1, 12);
+			p5.rect(xMax + 100, yPos + 1, 1, 12);
 			p5.fill(0xff999999);
 			p5.textAlign(PApplet.LEFT);
-			p5.text(n.getName(), xPos, yPos + 10);
-			p5.text(App.DF1.format(n.getSize()), xPos + 114, yPos + 10);
-			p5.text(n.getId(), xPos + 150, yPos + 10);
+			p5.text(n.getName(), xMax, yPos + 10);
+			p5.text(App.DF1.format(n.getSize()), xMax + 114, yPos + 10);
+			p5.text(n.getId(), xMax + 150, yPos + 10);
 			//		p5.textAlign(PApplet.RIGHT);
-			//		p5.text(n.getId(), xPos + 110, yPos + 10);
+			//		p5.text(n.getId(), xMax + 110, yPos + 10);
 		}
-		public void drawHovered() {
-			float xPos = x + r;
+		private void drawHovered() {
 //			int yPos = 50 + (n.getId() * 14);
 			p5.noFill(); p5.stroke(0xffffffff);
 			p5.ellipse(x, y, r, r);
 			p5.fill(0xff333333);
 			p5.stroke(n.getColor(), 100, 100);
 			p5.ellipse(xPos - 14, y + 7, 3, 3);
-			p5.noStroke();
-			p5.fill(0xff666666);
-			p5.rect(xPos + 100, y + 1, 1, 12);
-			p5.fill(0xff999999);
-			p5.textAlign(PApplet.LEFT);
-			p5.text(n.getName(), xPos, y + 10);
-			p5.text(App.DF1.format(n.getSize()), xPos + 114, y + 10);
-			p5.text(n.getId(), xPos + 150, y + 10);
 		}
-		public void drawActive() {
-			int xPos = App.WIDTH - 220;
-			int yPos = 57 + (n.getId() * 14);
+		private void drawActive() {
+
 			p5.fill(360, 50); p5.stroke(360);
 			p5.ellipse(x, y, r + 4, r + 4);
 			p5.fill(0xffff0000); p5.stroke(0xffff0000);
-		}
-		public void drawSelected() {
-			int xPos = App.WIDTH - 200;
-			int yPos = 50 + (n.getId() * 14);
-		/*	p5.noFill(); p5.stroke(0xff444444);
-			p5.line(x + r, y, x + (r * 2), y);
-			p5.line(xPos - 100, y, xPos - 30, yPos + 7);
-			p5.line(xPos - 30, yPos + 7, xPos - 14, yPos + 7);
-			// p5.bezier(xPos, yPos, (xPos+x)/2, yPos, xPos, y, x+r, y);
 			p5.noStroke();
-*/
+			p5.fill(0xff666666);
+			p5.rect(xMax + 100, y + 1, 1, 12);
+			p5.fill(0xff999999);
+			p5.textAlign(PApplet.LEFT);
+			p5.text(n.getName(), xPos + 20, y + 10);
+			p5.text(App.DF1.format(n.getSize()), xPos + 114, y + 10);
+			p5.text(n.getId(), xPos + 150, y + 10);
+		}
+		private void drawSelected() {
 			p5.fill(360, 25); p5.stroke(SELECTED);
 			p5.ellipse(x, y, r - 4, r - 4);
 			p5.strokeWeight(1);
 		}
-		public void drawLocked() {
+		private void drawLocked() {
 			p5.fill(0, 50); p5.stroke(360);
 			p5.ellipse(x, y, r - 8, r - 8);
 		}
 	}
 
-	public static class EdgeGfx {
+	private static class EdgeGfx {
 		App p5;
 		Edge e;
 		float ax;
 		float ay;
 		float bx;
 		float by;
-		public EdgeGfx(App p5, Edge e) {
+		private EdgeGfx(App p5, Edge e) {
 			this.p5 = p5;
 			this.e = e;
 			this.ax = e.getA().getX();
@@ -196,12 +185,13 @@ public class Display {
 			this.bx = e.getB().getX();
 			this.by = e.getB().getY();
 		}
-		public void draw() {
+		private EdgeGfx draw() {
 			p5.noFill();
 			p5.stroke(0xff666666);
 			p5.line(ax, ay, bx, by);
+			return this;
 		}
-		public void drawActive() {
+		private void drawActive() {
 			p5.noFill();
 			p5.stroke(SELECTED);
 			p5.line(ax, ay, bx, by);

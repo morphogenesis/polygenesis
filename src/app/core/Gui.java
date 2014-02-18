@@ -5,11 +5,9 @@ import app.ui.Editor;
 import controlP5.*;
 import util.Color;
 
-import java.io.Serializable;
-
 import static app.core.App.CP5;
 
-public class Gui implements Serializable {
+public class Gui {
 	public static Knob radiusSlider;
 	public static Knob colorSlider;
 	public static Knob capacitySlider;
@@ -40,10 +38,7 @@ public class Gui implements Serializable {
 	public static boolean drawVorVec;
 	public static boolean drawVorInfo;
 
-	public static boolean doClip;
-
 	public static float world_scale = 10;
-
 	public static float physDrag = 0.3f;
 	public static float physPtclScale = 1;
 	public static float physSprScale = 1;
@@ -64,7 +59,8 @@ public class Gui implements Serializable {
 	public static float vor_rectScale = 1;
 	public static float vor_intersectorScale = 1;
 	public static float vor_clipScale = 1;
-	static ControlWindow controlWindow;
+
+	public static int editor_numClones = 1;
 
 //	public static float particlePadding = 0.1f;
 //	public static float psys_boundsScale;
@@ -142,15 +138,15 @@ public class Gui implements Serializable {
 		accordion.open(0, 1);
 	}
 	public static void initGuiPhysProperties(App app) {
-		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(224);
+		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(236);
 		CP5.begin(10, 10);
 		CP5.addSlider("world_scale").setRange(1, 20).setDecimalPrecision(0).linebreak().setGroup(physConfig);
 		CP5.addSlider("verlet_drag").setValue(0.32f).setRange(0.1f, 1).setDecimalPrecision(2).linebreak().setGroup(physConfig);
 		CP5.addSlider("particle_scale").setValue(physPtclScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
 		CP5.addSlider("spring_scale").setValue(physSprScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_scale").setValue(physBhvScale).setRange(0, 7).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_strength").setValue(physPtclWght).setRange(0.1f, 5).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_strength").setValue(physBhvStr).setRange(-5f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+		CP5.addSlider("behavior_scale").setValue(physBhvScale).setRange(0, 3).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("particle_strength").setValue(physPtclWght).setRange(0.1f, 3).setDecimalPrecision(1).linebreak().setGroup(physConfig);
+		CP5.addSlider("behavior_strength").setValue(physBhvStr).setRange(-3f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
 		CP5.addSlider("spring_strength").setValue(physSprStr).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physConfig);
 		CP5.addSlider("mindist_strength").setValue(physMindistStr).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physConfig);
 /*		CP5.addSlider("cloudBhvScale").setValue(cloudBhvScale).setRange(10, 500).setDecimalPrecision(0).linebreak().setGroup(physConfig);

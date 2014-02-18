@@ -19,9 +19,9 @@ public class Editor {
 	public static ArrayList<Node> selectedNodes = new ArrayList<>();
 	public static ArrayList<Node> lockedNodes = new ArrayList<>();
 	public static ArrayList<Edge> adjacentEdges = new ArrayList<>();
-	private App p5;
+	//	private App p5;
 	private Graph graph;
-	public Editor(App p5) {this.p5 = p5; this.graph = App.GRAPH;}
+	public Editor() {this.graph = App.GRAPH;}
 
 	public void createNewNode(String name, float size, Vec2D pos) {
 		Node n = new Node(name, size, pos);
@@ -45,17 +45,7 @@ public class Editor {
 		for (Node n : selectedNodes) {
 			Edge e = new Edge(n, activeNode);
 			graph.addEdgeTwo(e);
-//			if ((s.a == a && s.b == b) || (s.a == b && s.b == a)) {
-//				graph.addEdge(new Edge(activeNode, n));}
-
 		}
-//		for
-		/*if (selectedNodes.size() >= 2) {
-			for (Node a : selectedNodes)
-				Node na = selectedNodes.get(0);
-			Node nb = selectedNodes.get(1);
-			graph.addEdge(new Edge(na, nb));
-		}*/
 	}
 
 	public static boolean hasActiveNode() {return activeNode != null; }
@@ -98,7 +88,7 @@ public class Editor {
 	public void mouseMoved(Vec2D mousePos) {highlightNodeNearPosition(mousePos);}
 	public void mousePressed(Vec2D mousePos) { selectNodeNearPosition(mousePos); }
 	public void mouseDragged(Vec2D mousePos) { if (hasActiveNode()) moveNode(mousePos); }
-	public void mouseReleased(Vec2D mousePos) {releaseNode(); }
+	public void mouseReleased() {releaseNode(); }
 	public void mouseWheel(float e) {
 		if (hasActiveNode()) {
 			float size = activeNode.getSize();
@@ -110,6 +100,8 @@ public class Editor {
 			if (e > 0) {activeNode.setSize(size - scale);}
 			else if (e < 0) {activeNode.setSize(size + scale);}
 			if (activeNode.getSize() <= 1) {activeNode.setSize(2);}
+		} for (Node n : selectedNodes) {
+			n.setSize(activeNode.getSize());
 		}
 	}
 

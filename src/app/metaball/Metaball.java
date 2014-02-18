@@ -11,17 +11,12 @@ public class Metaball {
 	private PApplet p5;
 	private ArrayList<MVec2D> MVec2Ds = new ArrayList<>();
 	private ArrayList<Vec2D> points = new ArrayList<>();
-	private float borderStepSize = 0.01f;
 	private float viscosity = 2;
 	private float viscosityNorm = 1.0f / viscosity;
 	private float minSize = 1e32f;
 	private float minThreshold;
 	private float threshold = 0.003f;
 	private float stepping = 20;
-	private float tracking = 0.25f;
-	private boolean dynamic = false;
-	private float weight = 10;
-	private int maxIterations = 10;
 	private float lineDistance = 5;
 	private boolean isRunning;
 
@@ -30,6 +25,7 @@ public class Metaball {
 	}
 	public void addParticles(ArrayList<MVec2D> mplist) {
 		for (MVec2D mp : mplist) {
+			float weight = 10;
 			mp.setWeight(weight);
 			if (mp.getWeight() < minSize) minSize = mp.getWeight();
 			minThreshold = (float) Math.pow(minSize / threshold, viscosityNorm);
@@ -69,6 +65,8 @@ public class Metaball {
 
 	private void resetMetaParticle(MVec2D mp) {
 		Vec2D borderPlusOne;
+		boolean dynamic = false;
+		float tracking = 0.25f;
 		if (dynamic) borderPlusOne = new Vec2D(mp.x + p5.random(-tracking, tracking), mp.y + p5.random(-tracking, tracking));
 		else borderPlusOne = new Vec2D(mp.x - tracking, mp.y - tracking);
 		mp.pos0 = trackTheBorder(borderPlusOne);
@@ -77,6 +75,7 @@ public class Metaball {
 	}
 	public Vec2D stepOnceTowardsBorder(Vec2D pos, float forceAtPoint) {
 		Vec2D np = calcNormal(pos);
+		float borderStepSize = 0.01f;
 		float stepsize = minThreshold - (float) Math.pow(minSize / forceAtPoint, viscosityNorm) + borderStepSize;
 		return new Vec2D(pos.x + np.x * stepsize, pos.y + np.y * stepsize);
 	}
@@ -87,6 +86,7 @@ public class Metaball {
 			force = calcForce(borderPlusOne);
 			borderPlusOne = stepOnceTowardsBorder(borderPlusOne, force);
 			iters++;
+			int maxIterations = 10;
 			if (iters > maxIterations) break;
 		} return borderPlusOne;
 	}
@@ -106,6 +106,7 @@ public class Metaball {
 	}
 	public Vec2D calcTangent(Vec2D pos) {
 		Vec2D np = this.calcNormal(pos);
+		//noinspection SuspiciousNameCombination
 		return new Vec2D(-np.y, np.x);
 	}
 	public Vec2D calcNormal(Vec2D pos) {

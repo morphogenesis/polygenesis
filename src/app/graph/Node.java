@@ -32,9 +32,7 @@ public class Node {
 	private VerletParticle2D particle2D;
 	@XmlTransient
 	private AttractionBehavior2D behavior2D;
-	public static void setNumberOfGNodes(int numberOfGNodes) {
-		Node.numberOfGNodes = numberOfGNodes;
-	}
+
 	@XmlTransient
 	private static int numberOfGNodes = 0;
 
@@ -45,10 +43,9 @@ public class Node {
 	}
 	public Node(String name, float size, Vec2D pos) {
 		this(name, size, pos, 10);
-		this.color = 10 + (20 * getId());
+		setColor(10 + (20 * getId()));
 	}
 	public Node(String name, float size, Vec2D pos, int color) {
-
 		this.id = ++numberOfGNodes;
 		this.name = name;
 		this.size = size;
@@ -58,14 +55,17 @@ public class Node {
 		this.particle2D = new VerletParticle2D(pos);
 		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.physBhvScale, -1);
 	}
+
 	public void update() {
 		particle2D.setWeight(Gui.physPtclWght);
 		x = particle2D.x;
 		y = particle2D.y;
 		behavior2D.setRadius(getRadius() * Gui.physBhvScale);
 		behavior2D.setStrength(Gui.physBhvStr);
-		color = (int) (360 / numberOfGNodes) * this.id;
+		color = 360 / numberOfGNodes * this.id;
 	}
+
+	public static void setNumberOfGNodes(int numberOfGNodes) { Node.numberOfGNodes = numberOfGNodes; }
 	public static int getNumberOfGNodes() {return numberOfGNodes;}
 	public float getX() { return x; }
 	public void setX(float x) { this.x = x; }

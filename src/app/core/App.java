@@ -27,7 +27,6 @@ public class App extends PApplet {
 	public static final DecimalFormat DF3 = new DecimalFormat("#.###");
 	public static final DecimalFormat DF2 = new DecimalFormat("#.##");
 	public static final DecimalFormat DF1 = new DecimalFormat("#.#");
-	//	public static String xmlFilePath = "./data/flowgraph_test_lg.xml";
 	public static boolean RECORDING = false;
 	public static boolean isShiftDown;
 	public static boolean isCtrlDown;
@@ -40,8 +39,8 @@ public class App extends PApplet {
 	public static VoronoiDiagram VSYS;
 	public static ControlP5 CP5;
 	public static PFont pfont, bfont;
-	public Vec2D mousePos() {return new Vec2D(mouseX, mouseY);}
-	Display display = new Display(this);
+	public Display display = new Display(this);
+
 	public static void main(String[] args) {
 		PApplet.main(new String[]{("app.core.App")});
 		System.out.println("Current File  " + filepath);
@@ -50,7 +49,6 @@ public class App extends PApplet {
 		System.out.println("********************  rebelRyeload  ********************");
 		System.out.println("Current File: " + filepath);
 	}
-
 	public void setup() {
 		pfont = createFont("SourceCodePro", 10);
 		bfont = createFont("SourceCodePro", 14);
@@ -58,14 +56,13 @@ public class App extends PApplet {
 		CP5 = new ControlP5(this);
 		PSYS = new PSys(this);
 		GRAPH = new Graph();
-		GEDIT = new Editor(this);
+		GEDIT = new Editor();
 		VSYS = new VoronoiDiagram(this);
 		Gui.initGUI(this);
 		size(WIDTH, HEIGHT, P2D);
 		frameRate(60);
 		smooth(16);
 		colorMode(HSB, 360, 100, 100, 100);
-//		background(0xffffffff);
 		background(Color.BG);
 		ellipseMode(RADIUS);
 		textAlign(LEFT);
@@ -75,7 +72,6 @@ public class App extends PApplet {
 		noFill();
 	}
 	public void draw() {
-//		background(0xffffffff);
 		background(Color.BG);
 		noFill(); noStroke();
 		VSYS.draw();
@@ -85,22 +81,8 @@ public class App extends PApplet {
 		CP5.draw();
 	}
 
-	public void mouseMoved() {
-		GEDIT.mouseMoved(mousePos());
-	}
-	public void mousePressed() {
-		if (mouseButton == RIGHT) { GEDIT.mousePressed(mousePos()); Gui.toggleObjProperties(); }
-	}
-	public void mouseDragged() {
-		if (mouseButton == RIGHT) GEDIT.mouseDragged(mousePos());
-	}
-	public void mouseReleased() {
-		if (mouseButton == RIGHT) GEDIT.mouseReleased(mousePos());
-	}
-	public void mouseWheel(MouseEvent event) {
-		float e = event.getCount();
-//		if (e > 0) {System.out.println("-");} else if (e == 0) {System.out.println("0");} else if (e < 0) {System.out.println("+");}
-		GEDIT.mouseWheel(e);
+	public void controlEvent(ControlEvent theEvent) {
+		Gui.controlEvent(this, theEvent);
 	}
 	public void keyPressed() {
 		if (key == CODED) {
@@ -112,7 +94,8 @@ public class App extends PApplet {
 			case '2': Gui.drawVorBez = !Gui.drawVorBez; break;
 			case '3': Gui.drawVorVec = !Gui.drawVorVec; break;
 			case '4': Gui.drawPhysInfo = !Gui.drawPhysInfo; break;
-			case 'c': Gui.doClip = !Gui.doClip; break;
+			case 'c':
+				break;
 			case 'a': GEDIT.createNewNode(Gui.nameTextfield.getStringValue(), Gui.radiusSlider.getValue(), mousePos()); Gui.toggleObjProperties(); break;
 			case 'f': GEDIT.createNewEdge(); break;
 			case 'x': GEDIT.deleteNode(); break;
@@ -125,9 +108,23 @@ public class App extends PApplet {
 	public void keyReleased() {
 		if (key == CODED && keyCode == SHIFT) { isShiftDown = false; }
 	}
-
-	public void controlEvent(ControlEvent theEvent) {
-		Gui.controlEvent(this, theEvent);
+	public void mouseDragged() {
+		if (mouseButton == RIGHT) GEDIT.mouseDragged(mousePos());
+	}
+	public void mouseMoved() {
+		GEDIT.mouseMoved(mousePos());
+	}
+	public Vec2D mousePos() {return new Vec2D(mouseX, mouseY);}
+	public void mousePressed() {
+		if (mouseButton == RIGHT) { GEDIT.mousePressed(mousePos()); Gui.toggleObjProperties(); }
+	}
+	public void mouseReleased() {
+		if (mouseButton == RIGHT) GEDIT.mouseReleased();
+	}
+	public void mouseWheel(MouseEvent event) {
+		float e = event.getCount();
+//		if (e > 0) {System.out.println("-");} else if (e == 0) {System.out.println("0");} else if (e < 0) {System.out.println("+");}
+		GEDIT.mouseWheel(e);
 	}
 }
 

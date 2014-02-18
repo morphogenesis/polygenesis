@@ -17,9 +17,9 @@ import java.util.HashMap;
  * Created on 2/13/14.
  */
 public class Graph {
-	private static XMLmap Map = new XMLmap();
-	private static HashMap<Integer, Node> nodeIndex = new HashMap<>();
-	private static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
+	protected static XMLmap Map = new XMLmap();
+	protected static HashMap<Integer, Node> nodeIndex = new HashMap<>();
+	protected static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
 	public static ArrayList<Node> nodes;
 	public static ArrayList<Edge> edges;
 	public Graph() {
@@ -74,9 +74,9 @@ public class Graph {
 			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
 			Marshaller m = jc.createMarshaller();
 			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			m.marshal(Graph.getMap(), System.out);
-			m.marshal(Graph.getMap(), file);
-			m.marshal(Graph.getMap(), staticFile);
+			m.marshal(Map, System.out);
+			m.marshal(Map, file);
+			m.marshal(Map, staticFile);
 		} catch (JAXBException e) { e.printStackTrace(); }
 	}
 	private static XMLmap readFromXML() {
@@ -86,7 +86,7 @@ public class Graph {
 			Unmarshaller um = jc.createUnmarshaller();
 			map = (XMLmap) um.unmarshal(new File(App.staticFilepath));
 			for (Node n : map.getNodes()) { System.out.println(n.getId() + "::" + n.getName() + "=>" + n.getSize()); }
-			setMap(map);
+			Map = map;
 		} catch (JAXBException e) { e.printStackTrace(); } return map;
 	}
 	public void addNode(Node n) {
@@ -121,30 +121,19 @@ public class Graph {
 		build();
 	}
 	public Edge getEdge(Node a, Node b) {
-		for (Edge e : Graph.edges) { if ((e.getA() == a && e.getB() == b) || (e.getA() == b && e.getB() == a)) { return e; } }
+		for (Edge e : edges) { if ((e.getA() == a && e.getB() == b) || (e.getA() == b && e.getB() == a)) { return e; } }
 		return null;
 	}
 	public Graph addEdgeTwo(Edge s) {
 		if (getEdge(s.getA(), s.getB()) == null) { addEdge(s); }
 		return this;
 	}
-	public static XMLmap getMap() { return Map; }
+	public Graph update() {
+		for (Node n : nodes) n.update();
+		for (Edge e : edges) e.update();
+		return this;
+	}
+	//	public static XMLmap getMap() { return Map; }
 	public static Node getNode(int id) {return nodeIndex.get(id);}
-	public static void setMap(XMLmap Map) { Graph.Map = Map; }
+//	public static void setMap(XMLmap Map) { Map = Map; }
 }
-/*	public void addNodes(ArrayList<Node> nodes) { for (Node n : nodes) { addNode(n); }}
-	public void addEdges(ArrayList<Edge> edges) { for (Edge e : edges) {addEdge(e);} }
-	public HashMap<Integer, ArrayList<Node>> getEdgeIndex() { return edgeIndex; }
-	public HashMap<Integer, Node> getNodeIndex() { return nodeIndex; }
-	public void setNodes(ArrayList<Node> nodes) { this.nodes = nodes; }
-	public void setEdges(ArrayList<Edge> edges) { this.edges = edges; }
-	public void reset() { nodes.clear(); edges.clear(); build(); }*/
-/*	@XmlTransient
-	private HashMap<Integer, ArrayList<Node>> relationIndex = new HashMap<>();
-	@XmlTransient
-	private HashMap<Integer, Node> nodeIndex = new HashMap<>();*/
-
-//	public void setRelationIndex(HashMap<Integer, ArrayList<Node>> relationIndex) {this.relationIndex = relationIndex;}
-//	public void setNodeIndex(HashMap<Integer, Node> nodeIndex) {this.nodeIndex = nodeIndex;}
-//	public HashMap<Integer, ArrayList<Node>> getRelationIndex() { return relationIndex; }
-//	public HashMap<Integer, Node> getNodeIndex() { return nodeIndex; }

@@ -26,7 +26,7 @@ public class PSys {
 	private VerletPhysics2D physics = new VerletPhysics2D();
 	private List<VerletSpring2D> springs = new ArrayList<>();
 	private List<VerletSpring2D> minDistSprings = new ArrayList<>();
-	private List<AttractionBehavior2D> behaviors = new ArrayList<>();
+	public List<AttractionBehavior2D> behaviors = new ArrayList<>();
 	private ArrayList<VerletParticle2D> particles = new ArrayList<>();
 	private ArrayList<VerletParticle2D> cloudParticles = new ArrayList<>();
 	private HashMap<String, String> info = new HashMap<>();
@@ -51,7 +51,9 @@ public class PSys {
 
 		if (Gui.drawPhysBehaviors) {
 			p5.stroke(0xff343434); p5.noFill();
-			for (AttractionBehavior2D a : behaviors) { Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius()); }
+			for (AttractionBehavior2D a : behaviors) {
+				Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius());
+			}
 			for (AttractionBehavior2D a : cloudAttractors) { Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius()); }
 		}
 
@@ -89,7 +91,7 @@ public class PSys {
 		info.put("x.s scale : ", App.DF3.format(Gui.physSprScale));
 	}
 	public void addMinDist() {
-		Graph g = App.GRAPH;
+//		Graph g = App.GRAPH;
 		for (Node na : Graph.nodes) {
 			VerletParticle2D va = na.getParticle2D();
 			for (Node nb : Graph.nodes) {
