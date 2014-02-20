@@ -103,6 +103,8 @@ public class App extends PApplet {
 			case 'q': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), true); break;
 			case 'w': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), false); break;
 			case 'l': GEDIT.lockNode(); break;
+			case 'o': VSYS.addPerim(50);
+			case 'p': VSYS.addExtras(9);
 		}
 	}
 	public void keyReleased() {
