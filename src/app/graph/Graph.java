@@ -17,16 +17,16 @@ import java.util.HashMap;
  * Created on 2/13/14.
  */
 public class Graph {
-	protected static XMLmap Map = new XMLmap();
-	protected static HashMap<Integer, Node> nodeIndex = new HashMap<>();
-	protected static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
+	private static XMLmap Map = new XMLmap();
+	private static HashMap<Integer, Node> nodeIndex = new HashMap<>();
+	private static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
 	public static ArrayList<Node> nodes;
 	public static ArrayList<Edge> edges;
 	public static float totalArea = 0;
 	public Graph() {
 		nodes = new ArrayList<>(); edges = new ArrayList<>();
 	}
-	public void build() {
+	public static void build() {
 		Map = new XMLmap();
 		Map.setNodes(nodes);
 		Map.setEdges(edges);
@@ -41,7 +41,7 @@ public class Graph {
 		} writeToXML();
 	}
 
-	public void rebuild() {
+	public static void rebuild() {
 		readFromXML();
 		nodes = new ArrayList<>();
 		edges = new ArrayList<>();
@@ -80,28 +80,27 @@ public class Graph {
 			m.marshal(Map, staticFile);
 		} catch (JAXBException e) { e.printStackTrace(); }
 	}
-	private static XMLmap readFromXML() {
-		XMLmap map = new XMLmap();
+	private static void readFromXML() {
+		XMLmap map;
 		try {
 			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
 			Unmarshaller um = jc.createUnmarshaller();
 			map = (XMLmap) um.unmarshal(new File(App.staticFilepath));
 			for (Node n : map.getNodes()) { System.out.println(n.getId() + "::" + n.getName() + "=>" + n.getSize()); }
 			Map = map;
-		} catch (JAXBException e) { e.printStackTrace(); } return map;
+		} catch (JAXBException e) { e.printStackTrace(); }
 	}
-	public void addNode(Node n) {
+	public static void addNode(Node n) {
 		nodes.add(n);
 		App.PSYS.addParticle(n);
-		App.VSYS.addCell(n);
 		build();
 	}
-	public void addEdge(Edge e) {
+	public static void addEdge(Edge e) {
 		edges.add(e);
 		App.PSYS.addSpring(e);
 		build();
 	}
-	public void removeNode(Node n) {
+	public static void removeNode(Node n) {
 		int id = n.getId();
 		int num = Node.getNumberOfGNodes();
 		Node.setNumberOfGNodes(num - 1);
@@ -115,31 +114,29 @@ public class Graph {
 			}
 		}
 	}
-	public void removeEdges(ArrayList<Edge> edges) { for (Edge e : edges) { removeEdge(e); } }
-	public void removeEdge(Edge e) {
+	public static void removeEdges(ArrayList<Edge> edges) { for (Edge e : edges) { removeEdge(e); } }
+	private static void removeEdge(Edge e) {
 		edges.remove(e);
 		edgeIndex.remove(e.getFrom());
 		App.PSYS.removeSpring(e);
 		build();
 	}
-	public Edge getEdge(Node a, Node b) {
+	private static Edge getEdge(Node a, Node b) {
 		for (Edge e : edges) { if ((e.getA() == a && e.getB() == b) || (e.getA() == b && e.getB() == a)) { return e; } }
 		return null;
 	}
-	public Graph addEdgeTwo(Edge s) {
+	public static void addEdgeTwo(Edge s) {
 		if (getEdge(s.getA(), s.getB()) == null) { addEdge(s); }
-		return this;
 	}
-	public Graph update() {
+	public static void update() {
 		totalArea = 0;
 		for (Node n : nodes) {
 			totalArea += n.getSize();
 			n.update();
 		}
 		for (Edge e : edges) e.update();
-		return this;
 	}
 	//	public static XMLmap getMap() { return Map; }
-	public static Node getNode(int id) {return nodeIndex.get(id);}
+	private static Node getNode(int id) {return nodeIndex.get(id);}
 //	public static void setMap(XMLmap Map) { Map = Map; }
 }

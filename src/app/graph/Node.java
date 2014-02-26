@@ -1,6 +1,5 @@
 package app.graph;
 
-import app.core.App;
 import app.core.Gui;
 import toxi.geom.Vec2D;
 import toxi.physics2d.VerletParticle2D;
@@ -26,6 +25,8 @@ public class Node {
 	private float x;
 	@XmlAttribute
 	private float y;
+	@XmlAttribute
+	private int type;
 	@XmlTransient
 	private VerletParticle2D particle2D;
 	@XmlTransient
@@ -61,20 +62,22 @@ public class Node {
 	public static void setNumberOfGNodes(int numberOfGNodes) { Node.numberOfGNodes = numberOfGNodes; }
 	public static int getNumberOfGNodes() {return numberOfGNodes;}
 	public float getX() { return x; }
-	public void setX(float x) { this.x = x; }
+	//	public void setX(float x) { this.x = x; }
 	public float getY() { return y; }
-	public void setY(float y) { this.y = y; }
+	//	public void setY(float y) { this.y = y; }
 	public int getId() { return id; }
 	public void setId(int id) {this.id = id;}
 	public String getName() { return name; }
 	public void setName(String name) {this.name = name;}
 	public float getSize() { return size; }
 	public void setSize(float size) {this.size = size;}
+	public int getType() { return type; }
+	public void setType(int type) { this.type = type; }
 	public VerletParticle2D getParticle2D() { return particle2D; }
 	public void setParticle2D(VerletParticle2D particle2D) { this.particle2D = particle2D;}
 	public AttractionBehavior2D getBehavior2D() { return behavior2D; }
 	public void setBehavior2D(AttractionBehavior2D behavior2D) { this.behavior2D = behavior2D; }
-	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.physPtclScale * App.world_scale); }
+	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.physPtclScale * Gui.world_scale); }
 	public int getOccupancy() { return occupancy; }
 	public void setOccupancy(int occupancy) { this.occupancy = occupancy; }
 }

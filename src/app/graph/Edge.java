@@ -17,17 +17,13 @@ public class Edge {
 	@XmlAttribute
 	private int to;
 	@XmlTransient
-	public Node a;
+	private Node a;
 	@XmlTransient
-	public Node b;
+	private Node b;
 	@XmlTransient
 	private VerletSpring2D spring2D;
 
-	public Edge() {
-//		this.a=Graph.getNode(getFrom());
-//		this.b=Graph.getNode(getTo());
-//		this.spring2D=new VerletSpring2D(getA().getParticle2D(), getB().getParticle2D(), 100 ,  0.001f);
-	}
+	public Edge() { }
 	public Edge(Node a, Node b) {
 		this.a = a;
 		this.b = b;
@@ -41,10 +37,9 @@ public class Edge {
 		spring2D.setRestLength(getLength() * Gui.physSprScale);
 	}
 	public VerletSpring2D getSpring2D() { return spring2D; }
-	public Edge setSpring2D(VerletSpring2D s) {
+	public void setSpring2D(VerletSpring2D s) {
 		spring2D = s;
-		return this;
-//		this.spring2D = spring2D;
+		//		this.spring2D = spring2D;
 	}
 	public float getLength() { return a.getRadius() + b.getRadius();}
 	public Node getB() { return b; }
@@ -52,7 +47,7 @@ public class Edge {
 	public Node getA() { return a;}
 	public void setA(Node nA) { this.a = nA; }
 	public int getFrom() { return from; }
-	public void setFrom(int from) {this.from = from;}
+	//	public void setFrom(int from) {this.from = from;}
 	public int getTo() { return to; }
-	public void setTo(int to) {this.to = to;}
+//	public void setTo(int to) {this.to = to;}
 }
