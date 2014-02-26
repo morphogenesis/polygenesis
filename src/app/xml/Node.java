@@ -1,4 +1,4 @@
-package app.graph;
+package app.xml;
 
 import app.core.Gui;
 import toxi.geom.Vec2D;
@@ -77,7 +77,7 @@ public class Node {
 	public void setParticle2D(VerletParticle2D particle2D) { this.particle2D = particle2D;}
 	public AttractionBehavior2D getBehavior2D() { return behavior2D; }
 	public void setBehavior2D(AttractionBehavior2D behavior2D) { this.behavior2D = behavior2D; }
-	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.physPtclScale * Gui.world_scale); }
+	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.physPtclScale * Gui.setWorldScl); }
 	public int getOccupancy() { return occupancy; }
 	public void setOccupancy(int occupancy) { this.occupancy = occupancy; }
 }

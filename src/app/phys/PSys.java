@@ -1,8 +1,10 @@
-package app.core;
+package app.phys;
 
-import app.graph.Edge;
+import app.core.App;
+import app.core.Gui;
 import app.graph.Graph;
-import app.graph.Node;
+import app.xml.Edge;
+import app.xml.Node;
 import processing.core.PApplet;
 import toxi.geom.Rect;
 import toxi.geom.Vec2D;
@@ -40,11 +42,11 @@ public class PSys {
 	public void draw() {
 		p5.noFill(); p5.noStroke();
 		if (Gui.updatePhysics) update();
-		if (Gui.drawPhysSprings) {p5.stroke(0xff333333); p5.noFill(); for (VerletSpring2D s : springs) { p5.line(s.a.x, s.a.y, s.b.x, s.b.y); } }
-		if (Gui.drawPhysMindist) {p5.stroke(0xff333333); p5.noFill(); for (VerletSpring2D s : mindists) { p5.line(s.a.x, s.a.y, s.b.x, s.b.y); } }
-		if (Gui.drawPhysParticles) { p5.stroke(BLACK); p5.fill(GREY_DK); for (VerletParticle2D a : physics.particles) { p5.ellipse(a.x, a.y, 3, 3); } }
-		if (Gui.drawPhysWeights) { p5.stroke(BLACK); p5.fill(GREY_DK); for (VerletParticle2D a : physics.particles) { p5.ellipse(a.x, a.y, a.getWeight(), a.getWeight()); } }
-		if (Gui.drawPhysBehaviors) { p5.stroke(0xff343434); p5.noFill(); for (AttractionBehavior2D a : behaviors) { Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius()); } }
+		if (Gui.drawPhysSpr) {p5.stroke(0xff333333); p5.noFill(); for (VerletSpring2D s : springs) { p5.line(s.a.x, s.a.y, s.b.x, s.b.y); } }
+		if (Gui.drawPhysMin) {p5.stroke(0xff333333); p5.noFill(); for (VerletSpring2D s : mindists) { p5.line(s.a.x, s.a.y, s.b.x, s.b.y); } }
+		if (Gui.drawPhysVec) { p5.stroke(BLACK); p5.fill(GREY_DK); for (VerletParticle2D a : physics.particles) { p5.ellipse(a.x, a.y, 3, 3); } }
+		if (Gui.drawPhysWgt) { p5.stroke(BLACK); p5.fill(GREY_DK); for (VerletParticle2D a : physics.particles) { p5.ellipse(a.x, a.y, a.getWeight(), a.getWeight()); } }
+		if (Gui.drawPhysBhv) { p5.stroke(0xff343434); p5.noFill(); for (AttractionBehavior2D a : behaviors) { Vec2D vb = a.getAttractor(); p5.ellipse(vb.x, vb.y, a.getRadius(), a.getRadius()); } }
 		if (Gui.drawPhysInfo) {drawInfo(); }
 	}
 	private void update() {
@@ -76,38 +78,6 @@ public class PSys {
 			p5.textAlign(PApplet.RIGHT); p5.text(String.valueOf(info.get(key)), 80, 0);
 		} p5.popMatrix();
 	}
-	public void addMinDist() {
-		for (Node na : Graph.nodes) {
-			VerletParticle2D va = na.getParticle2D();
-			for (Node nb : Graph.nodes) {
-				VerletParticle2D vb = nb.getParticle2D();
-				if ((na != nb) && (physics.getSpring(na.getParticle2D(), nb.getParticle2D()) == null)) {
-					float len = (na.getRadius() + nb.getRadius());
-					VerletSpring2D s = new VerletMinDistanceSpring2D(va, vb, len, .01f);
-					mindists.add(s);
-					physics.addSpring(s);
-				}
-			}
-		}
-	}
-
-/*	public void addAttractor(Vec2D pos) {
-		VerletParticle2D p = new VerletParticle2D(pos);
-		AttractionBehavior2D a = new AttractionBehavior2D(p, 200, 1f);
-		physics.addParticle(p);
-		physics.addBehavior(a);
-		attractorParticles.add(p);
-//		attractors.add(a);
-		for (int i = 1; i < attractorParticles.size(); i++) {
-			VerletParticle2D pi = attractorParticles.get(i);
-			for (int j = 0; j < i; j++) {
-				VerletParticle2D pj = attractorParticles.get(j);
-				VerletMinDistanceSpring2D s = new VerletMinDistanceSpring2D(pi, pj, 100, 0.1f);
-				mindists.add(s);
-				physics.addSpring(s);
-			}
-		}
-	}*/
 
 	public void addParticle(Node n) {
 		particles.add(n.getParticle2D());
@@ -129,15 +99,49 @@ public class PSys {
 		springs.remove(e.getSpring2D());
 		physics.removeSpring(e.getSpring2D());
 	}
-
-	public void clearMinDist() { for (VerletSpring2D s : mindists) { physics.springs.remove(s); } mindists.clear();}
 	public void reset() {springs.clear(); mindists.clear(); particles.clear(); behaviors.clear(); physics.clear();}
 
+	public void clearMinDist() {
+		for (VerletSpring2D s : mindists) { physics.springs.remove(s); }
+		mindists.clear();
+	}
+	public void addMinDist() {
+		clearMinDist();
+		for (Node na : Graph.nodes) {
+			VerletParticle2D va = na.getParticle2D();
+			for (Node nb : Graph.nodes) {
+				VerletParticle2D vb = nb.getParticle2D();
+				if ((na != nb) && (physics.getSpring(na.getParticle2D(), nb.getParticle2D()) == null)) {
+					float len = (na.getRadius() + nb.getRadius());
+					VerletSpring2D s = new VerletMinDistanceSpring2D(va, vb, len, .01f);
+					mindists.add(s);
+					physics.addSpring(s);
+				}
+			}
+		}
+	}
 	public VerletPhysics2D getPhysics() { return physics; }
 	public static Rect getBounds() { return bounds; }
+}
 //	public static void setBounds(Rect bounds) { PSys.bounds = bounds; }
 
 //	public float getDrag() {return physics.getDrag();}
 //	public ArrayList<VerletParticle2D> getParticles() { return particles; }
-}
 
+/*	public void addAttractor(Vec2D pos) {
+		VerletParticle2D p = new VerletParticle2D(pos);
+		AttractionBehavior2D a = new AttractionBehavior2D(p, 200, 1f);
+		physics.addParticle(p);
+		physics.addBehavior(a);
+		attractorParticles.add(p);
+//		attractors.add(a);
+		for (int i = 1; i < attractorParticles.size(); i++) {
+			VerletParticle2D pi = attractorParticles.get(i);
+			for (int j = 0; j < i; j++) {
+				VerletParticle2D pj = attractorParticles.get(j);
+				VerletMinDistanceSpring2D s = new VerletMinDistanceSpring2D(pi, pj, 100, 0.1f);
+				mindists.add(s);
+				physics.addSpring(s);
+			}
+		}
+	}*/

@@ -1,4 +1,4 @@
-package app.graph;
+package app.xml;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
  */
 @XmlRootElement(name = "flowgraph")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class XMLmap {
+public class XmlMap {
 
 	@XmlElement(name = "node")
 	private ArrayList<Node> nodes = new ArrayList<>();

@@ -1,4 +1,4 @@
-package app.graph;
+package app.xml;
 
 import app.core.Gui;
 import toxi.physics2d.VerletSpring2D;

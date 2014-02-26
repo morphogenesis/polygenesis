@@ -2,9 +2,10 @@ package app.ui;
 
 import app.core.App;
 import app.core.Gui;
-import app.graph.Edge;
+import app.graph.Editor;
 import app.graph.Graph;
-import app.graph.Node;
+import app.xml.Edge;
+import app.xml.Node;
 
 import java.util.ArrayList;
 
@@ -18,9 +19,9 @@ public class Display {
 
 	public void draw() {
 		Graph.update();
-		if (Gui.drawGraphNodes) { drawEdges();}
-		if (Gui.drawGraphEdges) { drawNodes(); }
-		if (Gui.drawGraphOutline) { drawOutliner(); }
+		if (Gui.drawGraphEdges) { drawEdges();}
+		if (Gui.drawGraphNodes) { drawNodes(); }
+		if (Gui.drawGraphList) { drawOutliner(); }
 //		if (Gui.drawVoronoi) { drawVoronoi(); }
 		drawStatusBar();
 	}

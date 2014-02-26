@@ -2,14 +2,15 @@ package app.ui;
 
 import app.core.App;
 import app.core.Gui;
+import app.graph.Editor;
 import app.graph.Graph;
-import app.graph.Node;
+import app.xml.Node;
 import processing.core.PApplet;
 
 /**
  * Created on 2/26/14.
  */
-class DrawNode {
+public class DrawNode {
 	private final App p5;
 	private final Node n;
 	private final float nY;
@@ -38,13 +39,21 @@ class DrawNode {
 	}
 
 	public void draw() {
-		drawNode(nR, nCol, 50);
+		drawNode(nR, nCol, -1);
+		drawInfo();
 		if (Editor.selectedNodes.contains(n)) { drawNode(nR - 1, nCol, -1); drawNode(nR - 3, 180, 40); }
 		if (n == Editor.activeNode) { drawNode(nR - 1, nCol, -1); drawNode(nR - 3, 360, 20); }
 		if (n == Editor.hoveredNode) { drawNode(nR - 1, 180, -1); }
 		if (Editor.lockedNodes.contains(n)) {drawNode(10, 0, nCol);}
-		if (Gui.drawGraphOutline) { drawDatablock(); }
+		if (Gui.drawGraphList) { drawDatablock(); }
 		drawNode(5, 20, nCol);
+	}
+	private void drawInfo() {
+		p5.fill(nCol);
+		p5.textAlign(PApplet.CENTER);
+		p5.text("[" + nId + "] " + (int) size, nX, nY - 10);
+		p5.textAlign(PApplet.LEFT);
+		p5.noFill();
 	}
 
 	private void drawNode(float size, int stroke, int fill) {
@@ -80,7 +89,8 @@ class DrawNode {
 			/** Text */
 			p5.fill(0xff000000);
 			p5.textAlign(PApplet.LEFT);
-			p5.text(name, xx + 20, yy - 3);
+			p5.text(nId, xx + 15, yy - 3);
+			p5.text(name, xx + 35, yy - 3);
 			p5.textAlign(PApplet.RIGHT);
 			p5.text(App.DF1.format(size) + "sq.m", xx + w - 10, yy - 3);
 			p5.textAlign(PApplet.LEFT);

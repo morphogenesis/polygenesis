@@ -1,10 +1,9 @@
-package app.ui;
+package app.graph;
 
 import app.core.App;
 import app.core.Gui;
-import app.graph.Edge;
-import app.graph.Graph;
-import app.graph.Node;
+import app.xml.Edge;
+import app.xml.Node;
 import processing.core.PApplet;
 import toxi.geom.Circle;
 import toxi.geom.Rect;
@@ -27,6 +26,7 @@ public class Editor {
 		Node n = new Node(name, size, pos);
 		System.out.println("number of nodes" + Node.getNumberOfGNodes());
 		Graph.addNode(n);
+		Graph.build();
 	}
 	public static void createNewBranch(float num, boolean split) {
 		if (hasActiveNode()) {
@@ -36,6 +36,8 @@ public class Editor {
 				Vec2D pos = Vec2D.fromTheta(i * PApplet.TWO_PI / num).scaleSelf(size).addSelf(parent.getParticle2D());
 				Node child = new Node(parent.getName() + i, size, pos);
 				Graph.addNode(child);
+				Graph.build();
+//				Graph.buildEdge(new Edge(parent, child));
 				Graph.addEdge(new Edge(parent, child));
 				selectedNodes.add(child);
 			} if (split) parent.setSize(size / (num + 1));
@@ -44,7 +46,7 @@ public class Editor {
 	public static void createNewEdge() {
 		for (Node n : selectedNodes) {
 			Edge e = new Edge(n, activeNode);
-			Graph.addEdgeTwo(e);
+			Graph.addEdge(e);
 		}
 	}
 
@@ -56,7 +58,7 @@ public class Editor {
 
 		for (Node n : Graph.nodes) {
 			Rect r = new Rect(App.WIDTH - 200, 50 + (n.getId() * 14), 160, 12);
-			if (c.containsPoint(n.getParticle2D())) { hoveredNode = n; break; } else if ((Gui.drawGraphOutline) && (r.containsPoint(mousePos))) { hoveredNode = n; break; }
+			if (c.containsPoint(n.getParticle2D())) { hoveredNode = n; break; } else if ((Gui.drawGraphList) && (r.containsPoint(mousePos))) { hoveredNode = n; break; }
 		}
 	}
 	private static void selectNodeNearPosition(Vec2D mousePos) {
@@ -64,7 +66,7 @@ public class Editor {
 		for (Node n : Graph.nodes) {
 			Rect r = new Rect(App.WIDTH - 200, 50 + (n.getId() * 14), 160, 12);
 			Circle c = new Circle(n.getX(), n.getY(), 20);
-			if (c.containsPoint(mousePos)) { setActiveNode(n); break; } else if ((Gui.drawGraphOutline) && (r.containsPoint(mousePos))) { setActiveNode(n); break; } else { deselectNode(); }
+			if (c.containsPoint(mousePos)) { setActiveNode(n); break; } else if ((Gui.drawGraphList) && (r.containsPoint(mousePos))) { setActiveNode(n); break; } else { deselectNode(); }
 		}
 	}
 	private static void setActiveNode(Node n) {

@@ -1,8 +1,9 @@
 package app.core;
 
+import app.graph.Editor;
 import app.graph.Graph;
-import app.graph.Node;
-import app.ui.Editor;
+import app.phys.PSys;
+import app.xml.Node;
 import controlP5.*;
 import org.philhosoft.p8g.svg.P8gGraphicsSVG;
 import util.Color;
@@ -13,10 +14,17 @@ public class Gui {
 	public static Knob radiusSlider;
 	private static Knob colorSlider;
 	public static Knob capacitySlider;
-	private static Group properties;
-	private static Group vorConfig;
-	private static Group physConfig;
-	private static Group cloudConfig;
+	private static Group toolGroup;
+	private static Group graphGroup;
+	private static Group vorGroup;
+	private static Group fileGroup;
+	private static Group physGroup;
+	private static Group cloudGroup;
+	private static MultiList fileMenu;
+	private static MultiList graphMenu;
+	private static MultiList cloudMenu;
+	private static MultiList physMenu;
+	private static MultiList vorMenu;
 	public static Textfield nameTextfield;
 	private static Accordion accordion;
 
@@ -25,8 +33,8 @@ public class Gui {
 	/**
 	 * Graph
 	 */
-	private static boolean updateGraph;
-	public static boolean drawGraphOutline = true;
+	public static boolean isGraphUpdating;
+	public static boolean drawGraphList = true;
 	public static boolean drawGraphNodes = true;
 	public static boolean drawGraphEdges = true;
 	public static boolean isEditMode = true;
@@ -37,13 +45,13 @@ public class Gui {
 	 */
 	public static boolean updatePhysics = true;
 	public static boolean drawPhysInfo;
-	public static boolean drawPhysParticles = true;
-	public static boolean drawPhysSprings = true;
-	public static boolean drawPhysMindist;
-	public static boolean drawPhysBehaviors;
-	public static boolean drawPhysWeights;
+	public static boolean drawPhysVec = true;
+	public static boolean drawPhysSpr = true;
+	public static boolean drawPhysMin;
+	public static boolean drawPhysBhv;
+	public static boolean drawPhysWgt;
 
-	public static float world_scale = 10;
+	public static float setWorldScl = 10;
 	public static float physDrag = 0.3f;
 	public static float physPtclScale = 1;
 	public static float physSprScale = 1;
@@ -56,207 +64,201 @@ public class Gui {
 	/**
 	 * Voronoi
 	 */
-	private static boolean updateVoronoi = true;
-	public static boolean drawVoronoi;
+	public static boolean isVorUpdating = true;
+	public static boolean isVorOffset = true;
+	public static boolean drawVoronoi = true;
 	public static boolean drawVorPoly = true;
 	public static boolean drawVorBez;
 	public static boolean drawVorVec;
 	public static boolean drawVorInfo;
-	public static final boolean drawVorOffset = true;
+	public static float setVorPerimres = 10;
+	public static float setVorClipscale = 1;
+	public static float setVorOffset = -2;
+	/*	private static float vor_ringScale = 1;	private static float vor_rectScale = 1;	private static float vor_intersectorScale = 1;*/
 
-	private static float vor_perimRes = 10;
-	private static float vor_ringScale = 1;
-	private static float vor_rectScale = 1;
-	private static float vor_intersectorScale = 1;
-	private static float vor_clipScale = 1;
-	public static final float vor_polyOffset = -2;
 	public static boolean drawCloud;
 
 	/**
 	 * Cloud
 	 */
 	public static float cloudBhvStr = -1;
-	public static float cloudBhvScale = 100;
-	public static float cloudPtclWght = .5f;
-	public static float cloudMindistScale = 100;
-	public static float cloudMindStr = -1;
-	public static boolean updateCloud;
+	public static float cloudBhvScl = 100;
+	public static float cloudVecWgt = .5f;
+	public static float cloudMinScl = 100;
+	public static float cloudMinStr = -1;
+	public static boolean isCloudUpdating;
 
 	public static void controlEvent(App app, ControlEvent theEvent) {
 		if (!theEvent.isGroup()) {
 			float theValue = theEvent.getController().getValue();
-			System.out.println(theEvent.getController().getName() + "=>" + theValue);
+//			System.out.println(theEvent.getController().getName() + "=>" + theValue);
 			switch (theEvent.getController().getName()) {
+				/** File */
 				case "file_quit": System.out.println("[quit]"); app.exit(); break;
 				case "file_open": Graph.rebuild(); break;
 				case "file_save": Graph.build(); break;
 				case "file_print": app.beginRecord(P8gGraphicsSVG.SVG, "./out/svg/print-###.svg"); App.RECORDING = true; break;
+				/** Graph */
+				case "drawGraphList": drawGraphList = !drawGraphList; break;
+				case "drawGraphNodes": drawGraphNodes = !drawGraphNodes; break;
+				case "drawGraphEdges": drawGraphEdges = !drawGraphEdges; break;
+				case "setWorldScl": setWorldScl = theValue; break;
+				case "doClearGraph": App.PSYS = new PSys(app); App.GRAPH = new Graph(); break;
+				case "isGraphUpdating": isGraphUpdating = !isGraphUpdating; break;
+				/** Physics */
+				case "drawPhysInfo": drawPhysInfo = !drawPhysInfo; break;
+				case "drawPhysVec": drawPhysVec = !drawPhysVec; break;
+				case "drawPhysSpr": drawPhysSpr = !drawPhysSpr; break;
+				case "drawPhysMin": drawPhysMin = !drawPhysMin; break;
+				case "drawPhysWgt": drawPhysWgt = !drawPhysWgt; break;
+				case "drawPhysBhv": drawPhysBhv = !drawPhysBhv; break;
+				case "isPhysUpdating": updatePhysics = !updatePhysics; break;
+				case "doAddMindist": App.PSYS.addMinDist(); break;
+				case "doClearMindist": App.PSYS.clearMinDist(); break;
+				case "doClearPhysics": App.PSYS.reset(); break;
+				case "setPhysDrag": physDrag = theValue; break;
+				case "setPhysVecScl": physPtclScale = theValue; break;
+				case "setPhysVecWgt": physPtclWght = theValue; break;
+				case "setPhysSprScl": physSprScale = theValue; break;
+				case "setPhysSprStr": physSprStr = theValue; break;
+				case "setPhysBhvScl": physBhvScale = theValue; break;
+				case "setPhysBhvStr": physBhvStr = theValue; break;
+				case "setPhysMinStr": physMindistStr = theValue; break;
+				/** Voronoi */
+				case "drawVoronoi": drawVoronoi = !drawVoronoi; break;
+				case "drawVorPoly": drawVorPoly = !drawVorPoly; break;
+				case "drawVorBez": drawVorBez = !drawVorBez; break;
+				case "drawVorVec": drawVorVec = !drawVorVec; break;
+				case "drawVorInfo": drawVorInfo = !drawVorInfo; break;
+				case "isVorUpdating": isVorUpdating = !isVorUpdating; break;
+				case "isVorOffset": isVorOffset = !isVorOffset; break;
+				case "setVorPerimres": setVorPerimres = theValue; break;
+				case "setVorClipscale": setVorClipscale = theValue; break;
+				case "setVorOffset": setVorOffset = theValue; break;
+				/** Cloud */
+				case "doAddCloud": App.CLOUD.addCloud(); break;
+				case "doAddCloudMind": App.CLOUD.addCloudMinDist(); break;
+				case "setCloudVecWgt": cloudVecWgt = theValue; break;
+				case "setCloudBhvScl": cloudBhvScl = theValue; break;
+				case "setCloudBhvStr": cloudBhvStr = theValue; break;
+				case "setCloudMinStr": cloudMinStr = theValue; break;
+				case "setCloudMinScl": cloudMinScl = theValue; break;
+				case "isCloudUpdating": isCloudUpdating = !isCloudUpdating; break;
+				case "drawCloud": drawCloud = !drawCloud; break;
 
-				case "view_outline": drawGraphOutline = !drawGraphOutline; break;
-				case "view_nodes": drawGraphNodes = !drawGraphNodes; break;
-				case "view_edges": drawGraphEdges = !drawGraphEdges; break;
-				case "view_particles": drawPhysParticles = !drawPhysParticles; break;
-				case "view_springs": drawPhysSprings = !drawPhysSprings; break;
-				case "view_minDist": drawPhysMindist = !drawPhysMindist; break;
-				case "view_weights": drawPhysWeights = !drawPhysWeights; break;
-				case "view_behaviors": drawPhysBehaviors = !drawPhysBehaviors; break;
-				case "view_voronoi": drawVoronoi = !drawVoronoi; break;
-				case "view_vorInfo": drawVorInfo = !drawVorInfo; break;
-				case "view_physInfo": drawPhysInfo = !drawPhysInfo; break;
-
-				case "run_physics": updatePhysics = !updatePhysics; break;
-				case "run_flowgraph": updateGraph = !updateGraph; break;
-				case "run_voronoi": updateVoronoi = !updateVoronoi; break;
-
-				case "world_scale": world_scale = theValue; break;
-				case "verlet_drag": physDrag = theValue; break;
-				case "particle_scale": physPtclScale = theValue; break;
-				case "mindist_strength": physMindistStr = theValue; break;
-				case "particle_strength": physPtclWght = theValue; break;
-				case "behavior_scale": physBhvScale = theValue; break;
-				case "behavior_strength": physBhvStr = theValue; break;
-				case "spring_scale": physSprScale = theValue; break;
-				case "spring_strength": physSprStr = theValue; break;
-
-				case "vor_perimRes": vor_perimRes = theValue; break;
-				case "vor_clipScale": vor_clipScale = theValue; break;
-				case "vor_ringScale": vor_ringScale = theValue; break;
-				case "vor_rectScale": vor_rectScale = theValue; break;
-				case "vor_intersectorScale": vor_intersectorScale = theValue; break;
-
-				case "cloudPtclWght": cloudPtclWght = theValue; break;
-				case "cloudBhvScale": cloudBhvScale = theValue; break;
-				case "cloudBhvStr": cloudBhvStr = theValue; break;
-				case "cloudMindStr": cloudMindStr = theValue; break;
-				case "cloudMindistScale": cloudMindistScale = theValue; break;
-
-				case "edit_addMinDist": App.PSYS.addMinDist(); break;
-				case "edit_addCloudMinDist": App.CLOUD.addCloudMinDist(); break;
-				case "edit_addCloud": App.CLOUD.addPerim(); break;
-				case "edit_rebuildMinD": App.PSYS.clearMinDist(); App.PSYS.addMinDist(); break;
-				case "edit_clearMinD": App.PSYS.clearMinDist(); break;
-				case "edit_clearPhys": App.PSYS.reset(); break;
-				case "edit_clearAll": App.PSYS = new PSys(app); App.GRAPH = new Graph(); break;
+				default: System.out.println("Missing ControlEvent [" + theEvent.getController().getName() + "=" + theValue + "]"); break;
 			}
 		}
 	}
-
-	public static void initGUI() {
+	public static void init() {
 		CP5.enableShortcuts();
 		CP5.setAutoDraw(false);
 		CP5.setFont(App.pfont, 10);
 		CP5.setAutoSpacing(4, 8);
 		CP5.setColorBackground(Color.CP5_BG).setColorForeground(Color.CP5_FG).setColorActive(Color.CP5_ACT);
 		CP5.setColorCaptionLabel(Color.CP5_CAP).setColorValueLabel(Color.CP5_VAL);
-		initGuiMainMenu();
-		initGuiOutline();
-		initGuiPhysics();
-		initGuiVoronoi();
-		initGuiGraph();
-		initGuiCloud();
-		accordion = CP5.addAccordion("acc").setPosition(0, 92).setWidth(220).setCollapseMode(Accordion.MULTI);
-		accordion.addItem(physConfig).addItem(vorConfig).addItem(cloudConfig).addItem(properties);
-		accordion.open(0, 1);
+
+		initControllers();
+		initMenus();
 		guiStyles();
+		/** Accordion */
+		accordion = CP5.addAccordion("acc").setPosition(0, 0).setWidth(220).setCollapseMode(Accordion.MULTI).setMinItemHeight(32);
+		accordion.addItem(physGroup).addItem(vorGroup).addItem(cloudGroup).addItem(toolGroup);
+		accordion.open(0, 1, 2);
 	}
 
-	private static void initGuiMainMenu() {
-		MultiList mainMenu = CP5.addMultiList("myList", 90, 0, 130, 24);
-		MultiListButton file; file = mainMenu.add("File", 1); file.setWidth(130).setHeight(20);
-		file.add("file_quit", 1).setCaptionLabel("Quit");
-		file.add("file_open", 1).setCaptionLabel("Open XML");
-		file.add("file_save", 1).setCaptionLabel("Save XML");
-		file.add("file_print", 1).setCaptionLabel("Print SVG");
-		file.add("file_loadDef", 1).setCaptionLabel("Load Defaults");
-		file.add("file_saveDef", 1).setCaptionLabel("Save Defaults");
-		MultiListButton view; view = mainMenu.add("View", 2); view.setWidth(130).setHeight(20);
-		view.add("view_physInfo", 1).setCaptionLabel("Info");
-		view.add("view_vorInfo", 1).setCaptionLabel("Info");
-		view.add("view_outliner", 1).setCaptionLabel("Outliner");
-		view.add("view_voronoi", 1).setCaptionLabel("Voronoi");
-		view.add("view_nodes", 1).setCaptionLabel("Nodes");
-		view.add("view_edges", 1).setCaptionLabel("Edges");
-		view.add("view_particles", 1).setCaptionLabel("Particles");
-		view.add("view_springs", 1).setCaptionLabel("Springs");
-		view.add("view_minDist", 1).setCaptionLabel("MinDist");
-		view.add("view_weights", 1).setCaptionLabel("Weights");
-		view.add("view_behaviors", 1).setCaptionLabel("Behaviors");
-		MultiListButton run; run = mainMenu.add("Run", 3); run.setWidth(130).setHeight(20);
-		run.add("run_physics", 1).setCaptionLabel("Run Physics");
-		run.add("run_voronoi", 1).setCaptionLabel("Run Voronoi");
-		run.add("run_updateVals", 1).setCaptionLabel("Update Values");
-		run.add("run_flowgraph", 1).setCaptionLabel("Update FlowGraph");
-		MultiListButton edit; edit = mainMenu.add("Edit", 4); edit.setWidth(130).setHeight(20);
-		edit.add("edit_addMinDist", 1).setCaptionLabel("Add MinDist");
-		edit.add("edit_rebuildMinD", 1).setCaptionLabel("Rebuild MinDist");
-		edit.add("edit_clearMinD", 1).setCaptionLabel("Clear MinDist");
-		edit.add("edit_addCloud", 1).setCaptionLabel("Add Cloud");
-		edit.add("edit_addCloudMinDist", 1).setCaptionLabel("Add CloudMinD");
-		edit.add("edit_clearPhys", 1).setCaptionLabel("Reset Physics");
-		edit.add("edit_clearAll", 1).setCaptionLabel("Clear");
-	}
-	private static void initGuiOutline() {
-		CP5.addButton("view_outline").setPosition(App.WIDTH - 200, 0);
-	}
-	private static void initGuiPhysics() {
-		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(245);
-		CP5.begin(10, 10);
-		CP5.addSlider("world_scale").setValue(world_scale).setRange(1, 20).setDecimalPrecision(0).linebreak().setGroup(physConfig);
-		CP5.addSlider("verlet_drag").setValue(physDrag).setRange(0.1f, 1).setDecimalPrecision(2).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_scale").setValue(physPtclScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("spring_scale").setValue(physSprScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_scale").setValue(physBhvScale).setRange(0, 3).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("particle_strength").setValue(physPtclWght).setRange(0.1f, 3).setDecimalPrecision(1).linebreak().setGroup(physConfig);
-		CP5.addSlider("behavior_strength").setValue(physBhvStr).setRange(-3f, 0).setDecimalPrecision(2).linebreak().setGroup(physConfig);
-		CP5.addSlider("spring_strength").setValue(physSprStr).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physConfig);
-		CP5.addSlider("mindist_strength").setValue(physMindistStr).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physConfig);
+	private static void initControllers() {
+		physGroup = CP5.addGroup("physics_group").setBackgroundHeight((9 * 24) + 24);
+		vorGroup = CP5.addGroup("voronoi_group").setBackgroundHeight((3 * 24) + 24);
+		cloudGroup = CP5.addGroup("cloud_group").setBackgroundHeight((5 * 24) + 24);
+		toolGroup = CP5.addGroup("tool_group").setBackgroundHeight(140);
+
+		CP5.begin(10, 12);
+		CP5.addSlider("setWorldScl").setValue(setWorldScl).setRange(1, 20).setDecimalPrecision(0).setGroup(physGroup).linebreak();
+		CP5.addSlider("setPhysDrag").setValue(physDrag).setRange(0.1f, 1).setDecimalPrecision(2).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysVecScl").setValue(physPtclScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysVecWgt").setValue(physPtclWght).setRange(0.1f, 3).setDecimalPrecision(1).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysSprScl").setValue(physSprScale).setRange(0.5f, 2).setDecimalPrecision(1).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysSprStr").setValue(physSprStr).setRange(0.001f, 0.05f).setDecimalPrecision(3).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysBhvScl").setValue(physBhvScale).setRange(0, 3).setDecimalPrecision(1).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysBhvStr").setValue(physBhvStr).setRange(-3f, 0).setDecimalPrecision(2).linebreak().setGroup(physGroup);
+		CP5.addSlider("setPhysMinStr").setValue(physMindistStr).setRange(0.001f, 0.05f).setDecimalPrecision(2).linebreak().setGroup(physGroup);
 		CP5.end();
-	}
-	private static void initGuiVoronoi() {
-		vorConfig = CP5.addGroup("VORONOI SETTINGS").setBackgroundHeight(164);
-		CP5.begin(10, 10);
-		CP5.addSlider("vor_perimRes").setValue(vor_perimRes).setRange(4, 20).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_ringScale").setValue(vor_ringScale).setRange(.1f, 10).setDecimalPrecision(1).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_rectScale").setValue(vor_rectScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_intersectorScale").setValue(vor_intersectorScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
-		CP5.addSlider("vor_clipScale").setValue(vor_clipScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorConfig).linebreak();
+		CP5.begin(10, 12);
+		CP5.addSlider("setVorClipscale").setValue(setVorClipscale).setRange(.01f, 2).setDecimalPrecision(1).setGroup(vorGroup).linebreak();
+		CP5.addSlider("setVorPerimres").setValue(setVorPerimres).setRange(4, 20).setDecimalPrecision(1).setGroup(vorGroup).linebreak();
+		CP5.addSlider("setVorOffset").setValue(setVorOffset).setRange(-10, 10).setDecimalPrecision(0).setGroup(vorGroup).linebreak();
 		CP5.end();
-	}
-	private static void initGuiGraph() {
-		properties = CP5.addGroup("OBJECT_PROPERTIES").setBackgroundHeight(200);
+		CP5.begin(10, 12);
+		CP5.addSlider("setCloudVecWgt").setValue(cloudVecWgt).setRange(.1f, 2).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudBhvScl").setValue(cloudBhvScl).setRange(10, 500).setDecimalPrecision(0).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudBhvStr").setValue(cloudBhvStr).setRange(-1f, 1).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudMinStr").setValue(cloudMinStr).setRange(.01f, 5).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudMinScl").setValue(cloudMinScl).setRange(20, 500).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.end();
 		CP5.begin(0, 0);
-		radiusSlider = CP5.addKnob("setSize").setCaptionLabel("Size").setRange(0, 500).setPosition(10, 30).setDecimalPrecision(1).setGroup(properties);
-		radiusSlider.setValue(50); radiusSlider.addListener(new radiusSliderListener()); radiusSlider.hide();
-		colorSlider = CP5.addKnob("setType").setCaptionLabel("Type").setRange(0, 360).setPosition(80, 30).setDecimalPrecision(0).setGroup(properties);
-		colorSlider.setValue(10); colorSlider.addListener(new colorSliderListener()); colorSlider.hide();
-		capacitySlider = CP5.addKnob("setCapacity").setCaptionLabel("Capacity").setRange(1, 200).setPosition(150, 30).setDecimalPrecision(0).setGroup(properties);
-		capacitySlider.setValue(1); capacitySlider.addListener(new capacitySliderListener()); capacitySlider.hide();
-		nameTextfield = CP5.addTextfield("setName").setCaptionLabel("Unique Datablock ID Name").setPosition(0, 0);
-		nameTextfield.setStringValue("untitled"); nameTextfield.addListener(new nameTextfieldListener()); nameTextfield.hide();
+		radiusSlider = CP5.addKnob("setSize").setCaptionLabel("Size").addListener(new radiusSliderListener()).setRange(0, 500).setValue(50).setPosition(10, 30).setDecimalPrecision(1).setGroup(toolGroup).hide();
+		colorSlider = CP5.addKnob("setType").setCaptionLabel("Type").addListener(new colorSliderListener()).setPosition(80, 30).setRange(0, 360).setValue(10).setDecimalPrecision(0).setGroup(toolGroup).hide();
+		capacitySlider = CP5.addKnob("setCapacity").setCaptionLabel("Capacity").addListener(new capacitySliderListener()).setPosition(150, 30).setRange(1, 200).setValue(1).setDecimalPrecision(0).setGroup(toolGroup).hide();
 		CP5.end();
-	}
-	private static void initGuiCloud() {
-		cloudConfig = CP5.addGroup("CLOUD_CONFIG").setBackgroundHeight(145);
-		CP5.begin(10, 10);
-		CP5.addSlider("cloudBhvScale").setValue(cloudBhvScale).setRange(10, 500).setDecimalPrecision(0).setGroup(cloudConfig).linebreak();
-		CP5.addSlider("cloudBhvStr").setValue(cloudBhvStr).setRange(-1f, 1).setDecimalPrecision(2).setGroup(cloudConfig).linebreak();
-		CP5.addSlider("cloudPtclWght").setValue(cloudPtclWght).setRange(.1f, 2).setDecimalPrecision(2).setGroup(cloudConfig).linebreak();
-		CP5.addSlider("cloudMindStr").setValue(cloudMindStr).setRange(.01f, 5).setDecimalPrecision(2).setGroup(cloudConfig).linebreak();
-		CP5.addSlider("cloudMindistScale").setValue(cloudMindistScale).setRange(20, 500).setDecimalPrecision(2).setGroup(cloudConfig).linebreak();
-		CP5.end();
-	}
 
+		/** Outliner */
+		nameTextfield = CP5.addTextfield("setName").setCaptionLabel("Name").addListener(new nameTextfieldListener()).setPosition(0, 0).setStringValue("untitled").hide();
+	}
+	private static void initMenus() {
+		fileMenu = CP5.addMultiList("myList", 220, 0, 130, 24);
+		MultiListButton file_options = fileMenu.add("fileButton", 1).setWidth(130).setHeight(20); file_options.setCaptionLabel("File");
+		file_options.add("file_quit", 1).setCaptionLabel("Quit");
+		file_options.add("file_open", 1).setCaptionLabel("Open XML");
+		file_options.add("file_save", 1).setCaptionLabel("Save XML");
+		file_options.add("file_print", 1).setCaptionLabel("Print SVG");
+		file_options.add("file_loadDef", 1).setCaptionLabel("Load Defaults");
+		file_options.add("file_saveDef", 1).setCaptionLabel("Save Defaults");
+		MultiListButton graph_options = fileMenu.add("graphButton", 2).setWidth(130).setHeight(20); graph_options.setCaptionLabel("Graph");
+		graph_options.add("drawGraphNodes", 1).setCaptionLabel("Draw Nodes");
+		graph_options.add("drawGraphEdges", 1).setCaptionLabel("Draw Edges");
+		graph_options.add("drawGraphList", 1).setCaptionLabel("Draw Outline");
+		graph_options.add("isGraphUpdating", 1).setCaptionLabel("Is Updating");
+		graph_options.add("doClearGraph", 1).setCaptionLabel("Clear Graph");
+		MultiListButton physics_options = fileMenu.add("physicsButton", 3).setWidth(130).setHeight(20); physics_options.setCaptionLabel("Physics");
+		physics_options.add("drawPhysInfo", 1).setCaptionLabel("Draw Info");
+		physics_options.add("drawPhysVec", 1).setCaptionLabel("Draw Particles");
+		physics_options.add("drawPhysSpr", 1).setCaptionLabel("Draw Springs");
+		physics_options.add("drawPhysMin", 1).setCaptionLabel("Draw MinDist");
+		physics_options.add("drawPhysWgt", 1).setCaptionLabel("Draw Weights");
+		physics_options.add("drawPhysBhv", 1).setCaptionLabel("Draw Behaviors");
+		physics_options.add("isPhysUpdating", 1).setCaptionLabel("Is Updating");
+		physics_options.add("doAddMindist", 1).setCaptionLabel("Add MinDist");
+		physics_options.add("doClearMindist", 1).setCaptionLabel("Clear MinDist");
+		physics_options.add("doClearPhysics", 1).setCaptionLabel("Clear Physics");
+		MultiListButton cloud_options = fileMenu.add("cloudButton", 4).setWidth(130).setHeight(20); cloud_options.setCaptionLabel("Cloud");
+		cloud_options.add("drawCloud", 1).setCaptionLabel("Draw Cloud");
+		cloud_options.add("doAddCloud", 1).setCaptionLabel("Add Cloud");
+		cloud_options.add("doAddCloudMind", 1).setCaptionLabel("Add MinDist");
+		cloud_options.add("isCloudUpdating", 1).setCaptionLabel("Is Updating");
+		MultiListButton voronoi_options = fileMenu.add("voronoiButton", 5).setWidth(130).setHeight(20); voronoi_options.setCaptionLabel("Voronoi");
+		voronoi_options.add("drawVorPoly", 1).setCaptionLabel("Draw Polygons");
+		voronoi_options.add("drawVorBez", 1).setCaptionLabel("Draw Bezier");
+		voronoi_options.add("drawVorVec", 1).setCaptionLabel("Draw Handles");
+		voronoi_options.add("drawVorInfo", 1).setCaptionLabel("Draw Info");
+		voronoi_options.add("isVorOffset", 1).setCaptionLabel("Is Offset");
+		voronoi_options.add("isVorUpdating", 1).setCaptionLabel("Is Updating");
+	}
 	private static void guiStyles() {
 		for (Button b : CP5.getAll(Button.class)) {
 			b.setSize(130, 22);
 			b.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER).setFont(App.pfont);
-		}
-		for (Knob k : CP5.getAll(Knob.class)) {
+		} for (Slider s : CP5.getAll(Slider.class)) {
+			s.setSize(200, 20);
+			s.showTickMarks(false);
+			s.setHandleSize(12);
+			s.setSliderMode(Slider.FLEXIBLE);
+			s.getValueLabel().align(ControlP5.LEFT, ControlP5.CENTER).getStyle().setPaddingLeft(4);
+			s.getCaptionLabel().align(ControlP5.RIGHT, ControlP5.CENTER).getStyle().setPaddingRight(4);
+		} for (Knob k : CP5.getAll(Knob.class)) {
 			k.setRadius(30);
 			k.setDragDirection(Knob.HORIZONTAL);
-			k.setGroup(properties);
-		}
-		for (Textfield t : CP5.getAll(Textfield.class)) {
+		} for (Textfield t : CP5.getAll(Textfield.class)) {
 			t.setSize(120, 12);
 			t.setAutoClear(false);
 			t.getCaptionLabel().align(ControlP5.CENTER, ControlP5.BOTTOM_OUTSIDE).getStyle().setPaddingTop(4);
@@ -265,16 +267,7 @@ public class Gui {
 			t.getValueLabel().align(ControlP5.LEFT, ControlP5.CENTER);
 			t.setColorForeground(0xffffffff);
 			t.getCaptionLabel().hide();
-		}
-		for (Slider s : CP5.getAll(Slider.class)) {
-			s.setSize(170, 16);
-			s.showTickMarks(false);
-			s.setHandleSize(12);
-			s.setSliderMode(Slider.FLEXIBLE);
-			s.getValueLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER).getStyle().setPaddingLeft(4);
-			s.getCaptionLabel().align(ControlP5.RIGHT, ControlP5.CENTER).getStyle().setPaddingRight(4);
-		}
-		for (Group g : CP5.getAll(Group.class)) {
+		} for (Group g : CP5.getAll(Group.class)) {
 			g.setBackgroundColor(Color.CP5_GRP);
 			g.setBarHeight(32);
 			g.getCaptionLabel().align(ControlP5.LEFT, ControlP5.CENTER).getStyle().setPaddingLeft(4);
@@ -290,14 +283,14 @@ public class Gui {
 			colorSlider.show();
 			capacitySlider.show();
 			nameTextfield.show();
-			accordion.open(3);
+			accordion.open(6);
 			nameTextfield.setPosition(outlinerX, 50 + Editor.activeNode.getId() * 14);
 		} else {
 			radiusSlider.hide();
 			colorSlider.hide();
 			capacitySlider.hide();
 			nameTextfield.hide();
-			accordion.close(3);
+			accordion.close(6);
 		}
 	}
 
@@ -364,3 +357,17 @@ public class Gui {
 		myChart.setColors("earth", 0xffffffff, 0xff00ff00);
 		myChart.updateData("earth", 1, 2, 10, 3);
 	}*/
+//		view.add("view_vorInfo", 1).setCaptionLabel("Vor Info");
+//		view.add("view_outliner", 1).setCaptionLabel("Outliner");
+//		view.add("view_voronoi", 1).setCaptionLabel("Voronoi");
+//		view.add("view_nodes", 1).setCaptionLabel("Nodes");
+//		view.add("view_edges", 1).setCaptionLabel("Edges");
+//		run.add("run_voronoi", 1).setCaptionLabel("Run Voronoi");
+//		run.add("run_flowgraph", 1).setCaptionLabel("Update FlowGraph");
+//		CP5.addSlider("vor_ringScale").setValue(vor_ringScale).setRange(.1f, 10).setDecimalPrecision(1).setGroup(vorGroup).linebreak();
+//		CP5.addSlider("vor_rectScale").setValue(vor_rectScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorGroup).linebreak();
+//		CP5.addSlider("vor_intersectorScale").setValue(vor_intersectorScale).setRange(.01f, 2).setDecimalPrecision(2).setGroup(vorGroup).linebreak();
+/*physics_options.add("edit_rebuildMinD", 1).setCaptionLabel("Rebuild MinDist");*/
+				/*case "vor_ringScale": vor_ringScale = theValue; break; case "vor_rectScale": vor_rectScale = theValue; break;				case "vor_intersectorScale": vor_intersectorScale = theValue; break;*/
+			/*	case "edit_rebuildMinD": App.PSYS.rebuildMinDist(); break;*/
+//	private static void initGuiProperties() {	}private static void physicsButtons() { }	private static void physicsSliders() { }	private static void voronoiButtons() { }	private static void voronoiSliders() { }	private static void initGuiCloud() { }

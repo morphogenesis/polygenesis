@@ -1,8 +1,10 @@
 package app.core;
 
+import app.graph.Editor;
 import app.graph.Graph;
+import app.phys.Cloud;
+import app.phys.PSys;
 import app.ui.Display;
-import app.ui.Editor;
 import controlP5.ControlEvent;
 import controlP5.ControlP5;
 import processing.core.PApplet;
@@ -14,8 +16,6 @@ import util.Color;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-//import util.xml.XMLflowgraph;
 
 public class App extends PApplet {
 	//	private static App P5;
@@ -32,7 +32,7 @@ public class App extends PApplet {
 	public static boolean isShiftDown;
 	//	private static boolean isCtrlDown;
 //	public static float ZOOM = 1;
-	//	public static float world_scale = 10;
+	//	public static float setWorldScl = 10;
 //	private static ToxiclibsSupport GFX;
 	public static PSys PSYS;
 	public static Cloud CLOUD;
@@ -50,7 +50,7 @@ public class App extends PApplet {
 	public static void __rebelReload() {
 		System.out.println("********************  rebelRyeload  ********************");
 		System.out.println("Current File: " + filepath);
-		Gui.initGUI();
+		Gui.init();
 	}
 	public void setup() {
 //		P5 = this;
@@ -61,9 +61,10 @@ public class App extends PApplet {
 		PSYS = new PSys(this);
 		CLOUD = new Cloud(this);
 		GRAPH = new Graph();
+		Graph.rebuild();
 		GEDIT = new Editor();
 		VSYS = new VoronoiDiagram(this);
-		Gui.initGUI();
+		Gui.init();
 		size(WIDTH, HEIGHT, P2D);
 		frameRate(60);
 		smooth(16);
@@ -113,7 +114,7 @@ public class App extends PApplet {
 				case 'q': Editor.createNewBranch(Gui.capacitySlider.getValue(), true); break;
 				case 'w': Editor.createNewBranch(Gui.capacitySlider.getValue(), false); break;
 				case 'l': Editor.lockNode(); break;
-//				case 'o': if (!Editor.hasActiveNode()) VSYS.addPerim(50);
+//				case 'o': if (!Editor.hasActiveNode()) VSYS.addCloud(50);
 //				case 'p': if (!Editor.hasActiveNode()) VSYS.addExtras(9);
 			}
 		}

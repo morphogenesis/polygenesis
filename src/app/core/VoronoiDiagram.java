@@ -1,7 +1,9 @@
 package app.core;
 
 import app.graph.Graph;
-import app.graph.Node;
+import app.phys.Cloud;
+import app.phys.PSys;
+import app.xml.Node;
 import processing.core.PApplet;
 import toxi.geom.*;
 import toxi.geom.mesh2d.Voronoi;
@@ -26,7 +28,7 @@ public class VoronoiDiagram {
 				poly = clipper.clipPolygon(poly);
 				if (poly.vertices.size() < 3) return;
 				if (!poly.isClockwise()) poly.flipVertexOrder();
-				if (Gui.drawVorOffset) poly.offsetShape(Gui.vor_polyOffset);
+				if (Gui.isVorOffset) poly.offsetShape(Gui.setVorOffset);
 				if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
 				if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
 				if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
@@ -78,8 +80,11 @@ public class VoronoiDiagram {
 	private void drawRegionInfo(Polygon2D poly, int fill) {
 		float x = poly.getCentroid().x;
 		float y = poly.getCentroid().y;
+
 		p5.fill(fill);
-		p5.text(poly.getNumVertices(), x, y);
+		p5.text("Vert: " + poly.getNumVertices(), x, y);
+		p5.text("Area: " + (int) (poly.getArea() / (Gui.setWorldScl * Gui.setWorldScl)), x, y + 10);
+		p5.text("Circ: " + (int) poly.getCircumference() / Gui.setWorldScl, x, y + 20);
 		p5.noFill();
 	}
 	private void drawSiteInfo(Vec2D v, int fill) {
@@ -98,7 +103,7 @@ public class VoronoiDiagram {
 		}
 	}*/
 
-/*	public void addPerim(int res) {
+/*	public void addCloud(int res) {
 		for (int i = 0; i < App.PSYS.getBounds().height; i += res) {
 			Vec2D l = new Vec2D(App.PSYS.getBounds().getLeft() + 20, i + App.PSYS.getBounds().getTop());
 			Vec2D r = new Vec2D(App.PSYS.getBounds().getRight() - 20, i + App.PSYS.getBounds().getTop());
@@ -119,7 +124,7 @@ public class VoronoiDiagram {
 		p5.fill(fill);
 		for (int i = 0; i < cellRegions.size(); i++) {
 			Polygon2D region = cellRegions.get(i);
-			int area = (int) (Math.abs(region.getArea()) / App.world_scale);
+			int area = (int) (Math.abs(region.getArea()) / App.setWorldScl);
 			Vec2D centroid = region.getCentroid();
 			p5.textAlign(PConstants.CENTER);
 			p5.text(area, centroid.x, centroid.y);
