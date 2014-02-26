@@ -22,6 +22,7 @@ public class Graph {
 	protected static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
 	public static ArrayList<Node> nodes;
 	public static ArrayList<Edge> edges;
+	public static float totalArea = 0;
 	public Graph() {
 		nodes = new ArrayList<>(); edges = new ArrayList<>();
 	}
@@ -31,7 +32,7 @@ public class Graph {
 		Map.setEdges(edges);
 		edgeIndex = new HashMap<>();
 		nodeIndex = new HashMap<>();
-		for (Node n : nodes) { nodeIndex.put(n.getId(), n); }
+		for (Node n : nodes) {totalArea += n.getSize(); n.setId(nodes.indexOf(n)); nodeIndex.put(n.getId(), n); }
 		for (Edge e : edges) {
 			ArrayList<Node> nlist = edgeIndex.get(e.getFrom());
 			if (nlist == null) { nlist = new ArrayList<>(); edgeIndex.put(e.getFrom(), nlist); }
@@ -92,6 +93,7 @@ public class Graph {
 	public void addNode(Node n) {
 		nodes.add(n);
 		App.PSYS.addParticle(n);
+		App.VSYS.addCell(n);
 		build();
 	}
 	public void addEdge(Edge e) {
@@ -129,7 +131,11 @@ public class Graph {
 		return this;
 	}
 	public Graph update() {
-		for (Node n : nodes) n.update();
+		totalArea = 0;
+		for (Node n : nodes) {
+			totalArea += n.getSize();
+			n.update();
+		}
 		for (Edge e : edges) e.update();
 		return this;
 	}

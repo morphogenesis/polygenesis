@@ -18,6 +18,8 @@ public class Gui {
 	public static Textfield nameTextfield;
 	public static Accordion accordion;
 
+	public static boolean isEditMode = true;
+
 	public static boolean updateGraph;
 	public static boolean drawGraphOutline = true;
 	public static boolean drawGraphNodes = true;
@@ -37,12 +39,13 @@ public class Gui {
 	public static boolean drawVorBez;
 	public static boolean drawVorVec;
 	public static boolean drawVorInfo;
+	public static boolean offsetVoronoi = true;
 
 	public static float world_scale = 10;
 	public static float physDrag = 0.3f;
 	public static float physPtclScale = 1;
 	public static float physSprScale = 1;
-	public static float physBhvScale = 1.5f;
+	public static float physBhvScale = 2f;
 	public static float physPtclWght = 1f;
 	public static float physBhvStr = -0.3f;
 	public static float physSprStr = 0.001f;
@@ -61,7 +64,7 @@ public class Gui {
 	public static float vor_clipScale = 1;
 
 	public static int editor_numClones = 1;
-
+	public static int outlinerX = App.WIDTH - 200;
 //	public static float particlePadding = 0.1f;
 //	public static float psys_boundsScale;
 
@@ -77,7 +80,7 @@ public class Gui {
 
 				case "view_nodes": drawGraphNodes = !drawGraphNodes; break;
 				case "view_edges": drawGraphEdges = !drawGraphEdges; break;
-				case "view_outliner": drawGraphOutline = !drawGraphOutline; break;
+//				case "view_outliner": drawGraphOutline = !drawGraphOutline; break;
 				case "view_particles": drawPhysParticles = !drawPhysParticles; break;
 				case "view_springs": drawPhysSprings = !drawPhysSprings; break;
 				case "view_minDist": drawPhysMindist = !drawPhysMindist; break;
@@ -86,6 +89,8 @@ public class Gui {
 				case "view_voronoi": drawVoronoi = !drawVoronoi; break;
 				case "view_vorInfo": drawVorInfo = !drawVorInfo; break;
 				case "view_physInfo": drawPhysInfo = !drawPhysInfo; break;
+
+				case "view_outline": drawGraphOutline = !drawGraphOutline; break;
 
 				case "run_physics": updatePhysics = !updatePhysics; break;
 				case "run_flowgraph": updateGraph = !updateGraph; break;
@@ -132,10 +137,14 @@ public class Gui {
 		voronoiOptions();
 		initGuiObProperties(app);
 		editorOptions();
+		initViewOptions();
 		initGUI_styles();
 		accordion = CP5.addAccordion("acc").setPosition(0, 92).setWidth(220).setCollapseMode(Accordion.MULTI);
 		accordion.addItem(physConfig).addItem(vorConfig).addItem(generator).addItem(properties);
 		accordion.open(0, 1);
+	}
+	private static void initViewOptions() {
+		CP5.addButton("view_outline").setPosition(App.WIDTH - 200, 0);
 	}
 	public static void initGuiPhysProperties(App app) {
 		physConfig = CP5.addGroup("VERLET PHYSICS SETTINGS").setBackgroundHeight(236);
@@ -175,7 +184,7 @@ public class Gui {
 		colorSlider.setValue(50); colorSlider.addListener(new colorSliderListener()); colorSlider.hide();
 		capacitySlider = CP5.addKnob("setCapacity").setCaptionLabel("Capacity").setRange(1, 200).setPosition(150, 30).setDecimalPrecision(0).setGroup(properties);
 		capacitySlider.setValue(1); capacitySlider.addListener(new capacitySliderListener()); capacitySlider.hide();
-		nameTextfield = CP5.addTextfield("setName").setCaptionLabel("Unique Datablock ID Name").setPosition(40, 140).setGroup(properties);
+		nameTextfield = CP5.addTextfield("setName").setCaptionLabel("Unique Datablock ID Name").setPosition(0, 0);
 		nameTextfield.setStringValue("untitled"); nameTextfield.addListener(new nameTextfieldListener()); nameTextfield.hide();
 		CP5.end();
 	}
@@ -253,10 +262,15 @@ public class Gui {
 			k.setGroup(properties);
 		}
 		for (Textfield t : CP5.getAll(Textfield.class)) {
-			t.setSize(140, 22);
+			t.setSize(120, 12);
 			t.setAutoClear(false);
 			t.getCaptionLabel().align(ControlP5.CENTER, ControlP5.BOTTOM_OUTSIDE).getStyle().setPaddingTop(4);
-			t.setGroup(properties);
+			t.setColor(0xff000000);
+			t.setColorBackground(0xffffffff);
+//			t.setGroup(properties);
+			t.getValueLabel().align(ControlP5.LEFT, ControlP5.CENTER);
+			t.setColorForeground(0xffffffff);
+			t.getCaptionLabel().hide();
 		}
 		for (Slider s : CP5.getAll(Slider.class)) {
 			s.setSize(170, 16);
@@ -275,7 +289,7 @@ public class Gui {
 	static void toggleObjProperties() {
 		if (Editor.hasActiveNode()) {
 			radiusSlider.setValue(Editor.activeNode.getSize());
-			colorSlider.setValue(Editor.activeNode.getColor());
+//			colorSlider.setValue(Editor.activeNode.getColor());
 			capacitySlider.setValue(Editor.activeNode.getOccupancy());
 			nameTextfield.setValue(Editor.activeNode.getName());
 			radiusSlider.show();
@@ -283,8 +297,8 @@ public class Gui {
 			capacitySlider.show();
 			nameTextfield.show();
 			accordion.open(3);
-		}
-		else {
+			nameTextfield.setPosition(outlinerX, 50 + Editor.activeNode.getId() * 14);
+		} else {
 			radiusSlider.hide();
 			colorSlider.hide();
 			capacitySlider.hide();
@@ -302,7 +316,7 @@ public class Gui {
 		float color;
 		public void controlEvent(ControlEvent e) {
 			color = e.getController().getValue();
-			if (App.CP5.isMouseOver()) { for (Node n : Editor.selectedNodes) {n.setColor((int) color);} }
+//			if (App.CP5.isMouseOver()) { for (Node n : Editor.selectedNodes) {n.setColor((int) color);} }
 		}
 	}
 

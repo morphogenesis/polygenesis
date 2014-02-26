@@ -23,8 +23,6 @@ public class Node {
 	@XmlAttribute
 	private int occupancy;
 	@XmlAttribute
-	private int color;
-	@XmlAttribute
 	private float x;
 	@XmlAttribute
 	private float y;
@@ -41,17 +39,13 @@ public class Node {
 		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.physBhvScale, -1);
 		++numberOfGNodes;
 	}
+
 	public Node(String name, float size, Vec2D pos) {
-		this(name, size, pos, 10);
-		setColor(10 + (20 * getId()));
-	}
-	public Node(String name, float size, Vec2D pos, int color) {
 		this.id = ++numberOfGNodes;
 		this.name = name;
 		this.size = size;
 		this.x = pos.x;
 		this.y = pos.y;
-		this.color = color;
 		this.particle2D = new VerletParticle2D(pos);
 		this.behavior2D = new AttractionBehavior2D(this.particle2D, getRadius() * Gui.physBhvScale, -1);
 	}
@@ -62,7 +56,6 @@ public class Node {
 		y = particle2D.y;
 		behavior2D.setRadius(getRadius() * Gui.physBhvScale);
 		behavior2D.setStrength(Gui.physBhvStr);
-		color = 360 / numberOfGNodes * this.id;
 	}
 
 	public static void setNumberOfGNodes(int numberOfGNodes) { Node.numberOfGNodes = numberOfGNodes; }
@@ -84,6 +77,4 @@ public class Node {
 	public float getRadius() { return (float) ((Math.sqrt(this.size / Math.PI)) * Gui.physPtclScale * App.world_scale); }
 	public int getOccupancy() { return occupancy; }
 	public void setOccupancy(int occupancy) { this.occupancy = occupancy; }
-	public int getColor() { return color; }
-	public void setColor(int color) { this.color = color; }
 }
