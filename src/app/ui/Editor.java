@@ -1,11 +1,13 @@
 package app.ui;
 
 import app.core.App;
+import app.core.Gui;
 import app.graph.Edge;
 import app.graph.Graph;
 import app.graph.Node;
 import processing.core.PApplet;
 import toxi.geom.Circle;
+import toxi.geom.Rect;
 import toxi.geom.Vec2D;
 
 import java.util.ArrayList;
@@ -51,16 +53,21 @@ public class Editor {
 	public static boolean hasActiveNode() {return activeNode != null; }
 
 	void highlightNodeNearPosition(Vec2D mousePos) {
-		hoveredNode = null; Circle c = new Circle(mousePos, 20);
-		for (Node n : Graph.nodes) { if (c.containsPoint(n.getParticle2D())) { hoveredNode = n; break; } }
+		hoveredNode = null;
+		Circle c = new Circle(mousePos, 20);
+
+		for (Node n : Graph.nodes) {
+			Rect r = new Rect(App.WIDTH - 200, 50 + (n.getId() * 14), 160, 12);
+			if (c.containsPoint(n.getParticle2D())) { hoveredNode = n; break; } else if ((Gui.drawGraphOutline) && (r.containsPoint(mousePos))) { hoveredNode = n; break; }
+		}
 	}
 	void selectNodeNearPosition(Vec2D mousePos) {
 		if (!App.isShiftDown) { clearSelection(); }
 		else if (hasActiveNode()) {selectedNodes.add(activeNode); deselectNode(); }
 		for (Node n : Graph.nodes) {
+			Rect r = new Rect(App.WIDTH - 200, 50 + (n.getId() * 14), 160, 12);
 			Circle c = new Circle(n.getX(), n.getY(), 20);
-			if (c.containsPoint(mousePos)) { setActiveNode(n); break; }
-			else { deselectNode(); }
+			if (c.containsPoint(mousePos)) { setActiveNode(n); break; } else if ((Gui.drawGraphOutline) && (r.containsPoint(mousePos))) { setActiveNode(n); break; } else { deselectNode(); }
 		}
 	}
 	void setActiveNode(Node n) {
@@ -71,7 +78,7 @@ public class Editor {
 	void deselectNode() { releaseNode(); activeNode = null; adjacentEdges.clear(); }
 	void clearSelection() { selectedNodes.clear(); adjacentEdges.clear(); }
 
-	void moveNode(Vec2D mousePos) { if (hasActiveNode()) { activeNode.getParticle2D().lock(); activeNode.getParticle2D().set(mousePos); } }
+	void moveNode(Vec2D mousePos) { activeNode.getParticle2D().lock(); activeNode.getParticle2D().set(mousePos); }
 	void releaseNode() { if (hasActiveNode()) { if (!lockedNodes.contains(activeNode)) activeNode.getParticle2D().unlock(); } }
 
 	void selectAdjacentEdges() {
@@ -87,7 +94,7 @@ public class Editor {
 
 	public void mouseMoved(Vec2D mousePos) {highlightNodeNearPosition(mousePos);}
 	public void mousePressed(Vec2D mousePos) { selectNodeNearPosition(mousePos); }
-	public void mouseDragged(Vec2D mousePos) { if (hasActiveNode()) moveNode(mousePos); }
+	public void mouseDragged(Vec2D mousePos) { if ((hasActiveNode()) && (Gui.isEditMode)) moveNode(mousePos); }
 	public void mouseReleased() {releaseNode(); }
 	public void mouseWheel(float e) {
 		if (hasActiveNode()) {

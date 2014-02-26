@@ -7,6 +7,8 @@ import app.graph.Graph;
 import app.graph.Node;
 import processing.core.PApplet;
 
+import java.util.ArrayList;
+
 import static util.Color.SELECTED;
 
 /**
@@ -22,151 +24,144 @@ public class Display {
 		if (Gui.drawGraphNodes) { drawEdges();}
 		if (Gui.drawGraphEdges) { drawNodes(); }
 		if (Gui.drawGraphOutline) { drawOutliner(); }
+		if (Gui.drawVoronoi) { drawVoronoi(); }
+		drawStatusBar();
 	}
 
 	private void drawEdges() {
-		p5.noFill();
-		p5.noStroke();
-		for (Edge e : Graph.edges) {
-			EdgeGfx gfx = new EdgeGfx(p5, e);
-			gfx.draw();
-			if (Editor.adjacentEdges.contains(e)) gfx.drawActive();
-		}
+		ArrayList<EdgeGfx> egfx = new ArrayList<>();
+		for (Edge e : Graph.edges) { egfx.add(new EdgeGfx(p5, e)); }
+		for (EdgeGfx fx : egfx) { fx.draw(); }
+		for (EdgeGfx fx : egfx) { if (Editor.adjacentEdges.contains(fx.e)) fx.drawActive(); }
 	}
 
 	private void drawNodes() {
-		p5.noFill();
-		p5.noStroke();
-		for (Node n : Graph.nodes) {
-			n.update();
-			NodeGfx t = new NodeGfx(p5, n);
-			if (Gui.drawGraphOutline) { t.drawListing(); }
-			t.draw();
-			if (Gui.drawPhysInfo) { t.drawNametag();}
-			if (n == Editor.activeNode) t.drawActive();
-			if (n == Editor.hoveredNode) t.drawHovered();
-			if (Editor.selectedNodes.contains(n)) t.drawSelected();
-			if (Editor.lockedNodes.contains(n)) t.drawLocked();
-		}
+		ArrayList<NodeGfx> ngfx = new ArrayList<>();
+		for (Node n : Graph.nodes) { n.update(); ngfx.add(new NodeGfx(p5, n)); }
+		for (NodeGfx nt : ngfx) { nt.draw(); }
+		for (NodeGfx nt : ngfx) { nt.drawWire(); }
 	}
 
 	private void drawOutliner() {
-		p5.noFill(); p5.noStroke();
-		float totalSize = 0;
-		int xx = App.WIDTH - 120;
-		for (Node n : Graph.nodes) { totalSize += n.getSize(); }
+		int xO = Gui.outlinerX;
+		String totalArea = App.DF1.format(Graph.totalArea);
 		p5.noStroke();
-		p5.fill(0xff999999);
+		p5.fill(0xffeaeaea);
 		p5.text("NAME", 10, -2);
-		p5.textAlign(PApplet.RIGHT);
 		p5.text("AREA", 100, -2);
 		p5.textFont(App.bfont, 14);
-		p5.text("Total Area: " + App.DF1.format(totalSize) + " sq.m", xx + 100, 30);
+		p5.text("Total Area: " + totalArea + " sq.m", xO, 40);
 		p5.textFont(App.pfont, 10);
+		p5.noFill();
+	}
+	private void drawVoronoi() {
+
+	}
+	private void drawStatusBar() {
+		if (Gui.isEditMode) {
+			p5.fill(0xffff0000);
+			p5.text("Edit Mode", App.WIDTH / 2, 20);
+			p5.noFill();
+		}
 	}
 
 	private static class NodeGfx {
-		App p5;
-		Node n;
-		float y;
-		float x;
-		float r;
-		int xMax;
-		float xPos;
-		int yPos;
+		private App p5;
+		private Node n;
+		private final float nY;
+		private final float nX;
+		private final float nR;
+		private final int nCol;
+		private final int nId;
+		private static final int oX = Gui.outlinerX;
+		private final int oY;
+		private float areaPercentage;
+		private final String name;
+		private final float size;
+
 		public NodeGfx(App p5, Node n) {
 			this.p5 = p5;
 			this.n = n;
-			this.x = n.getX();
-			this.y = n.getY();
-			this.r = n.getRadius();
-			this.xMax = App.WIDTH - 200;
-			this.xPos = x + r;
-			this.yPos = 50 + (n.getId() * 14);
+			this.nX = n.getX();
+			this.nY = n.getY();
+			this.nR = n.getRadius();
+			this.nId = n.getId();
+			this.name = n.getName();
+			this.size = n.getSize();
+			this.oY = 50 + (n.getId() * 14);
+			this.nCol = (Graph.nodes.size() / 2 + (360 / (Graph.nodes.size()) * n.getId()));
+			this.areaPercentage = (n.getSize() / Graph.totalArea) * 100;
 		}
 		private void draw() {
-			p5.noFill(); p5.stroke(n.getColor(), 100, 100, 100);
-			p5.ellipse(x, y, r + 1, r + 1);
-//			p5.stroke(0xff999999); p5.strokeWeight(1);
-//			p5.ellipse(x, y, r, r);
-			p5.fill(n.getColor(), 100, 100, 100); p5.stroke(0xff1d1d1d);
-			p5.ellipse(x, y, 5, 5);
+			drawNode(nR, nCol, -1);
+
+			if (Editor.selectedNodes.contains(n)) { drawNode(nR - 1, nCol, -1); drawNode(nR - 3, 180, 40); }
+			if (n == Editor.activeNode) { drawNode(nR - 1, nCol, -1); drawNode(nR - 3, 360, 20); }
+			if (n == Editor.hoveredNode) { drawNode(nR - 1, 180, -1); }
+			if (Editor.lockedNodes.contains(n)) {drawNode(10, 0, nCol);}
+			if (Gui.drawGraphOutline) { drawDatablock(); }
+			drawNode(5, 20, nCol);
 		}
-		private void drawNametag() {
-//			float x = r * App.cos(theta);
 
-			p5.fill(0xff333333);
-			p5.stroke(0xff999999);
-			p5.rect(240, n.getY(), 120, 16);
-			p5.textAlign(PApplet.CENTER);
-			p5.fill(0xffffffff);
-			p5.text(n.getName() + " " + n.getId(), 300, n.getY() + 12);
-			p5.fill(0xff333333);
-			p5.stroke(0xff444444);
-			p5.line(350, y, x, y);
-			p5.stroke(0xff999999);
-			p5.rect(364, y, 16, 16);
-			p5.textAlign(PApplet.CENTER);
-			p5.fill(n.getColor(), 100, 100);
-			p5.text(n.getId(), 372, y + 12);
+		private void drawNode(float size, int stroke, int fill) {
+			if (fill == -1) { p5.noFill(); } else if (fill == nCol) { p5.fill(fill, 100, 100, 100); } else p5.fill(fill);
+			p5.stroke(stroke);
+			if (stroke == -1) { p5.noStroke(); } else if (stroke == nCol) p5.stroke(stroke, 100, 100, 100);
+			p5.ellipse(nX, nY, size, size);
+			p5.noFill(); p5.noStroke();
 		}
-		private void drawListing() {
 
-			p5.noFill();
-			p5.stroke(0xff444444);
-			p5.line(x + r, y, xMax - 100, y);
-			p5.line(xMax - 100, y, xMax - 20, yPos + 7);
-			p5.line(xMax - 20, yPos + 7, xMax, yPos + 7);
-			//		p5.bezier(xMax, yPos, xMax-100, yPos, xMax, y, x+r, y);
-			p5.noStroke();
-			if (n.getId() % 2 == 0) { p5.fill(0xff2b2b2b); }
-			else { p5.fill(0xff333333); }
-			p5.rect(xMax - 10, yPos + 1, 160, 12);
+		private void drawWire() {
+			if ((Editor.selectedNodes.contains(n)) || (Editor.activeNode == n)) {
 
+				/** Wire */
+				p5.stroke(0xff444444);
+				p5.line(nX, nY, nX + nR + 12, nY - nR - 12);
+				p5.line(nX + nR + 12, nY - nR - 12, oX - 100, nY - nR - 12);
+				p5.line(oX - 100, nY - nR - 12, oX - 20, oY + 7);
+				p5.line(oX - 20, oY + 7, oX, oY + 7);
+				p5.noStroke();
+
+				/** Tag */
+				float h = 12;
+				float w = 180;
+				float xx = nX + nR;
+				float yy = nY - nR;
+				p5.fill(0xff444444);
+				p5.quad(xx, yy, xx + h, yy - h, xx + w + h, yy - h, xx + w, yy);
+
+				/** Text */
+				float tY = nY - nR - 3;
+				p5.fill(0xff222222);
+				p5.textAlign(PApplet.LEFT);
+				p5.text(name, xx + 20, tY);
+				p5.text(App.DF1.format(size), xx + 114, tY);
+				p5.text(nId, xx + 150, tY);
+				p5.noFill();
+			}
+		}
+
+		private void drawDatablock() {
+			/** Dot */
 			p5.fill(0xff333333);
-			p5.stroke(n.getColor(), 100, 100);
-			p5.ellipse(xMax - 14, yPos + 7, 3, 3);
+			p5.stroke(nCol, 100, 100);
+			p5.ellipse(-8, oY + 7, 3, 3);
+
+			/** Bar */
+			if (nId % 2 == 0) { p5.fill(0xff2b2b2b); } else { p5.fill(0xff333333); }
 			p5.noStroke();
-			p5.fill(0xff666666);
-			p5.rect(xMax + 100, yPos + 1, 1, 12);
-			p5.fill(0xff999999);
+			p5.rect(oX, oY + 1, 200, 12);
+			p5.stroke(0xff666666);
+			p5.line(+120, oY + 1, +120, oY + 12);
+
+			/** Text */
+			p5.fill(0xffaeaeae);
 			p5.textAlign(PApplet.LEFT);
-			p5.text(n.getName(), xMax, yPos + 10);
-			p5.text(App.DF1.format(n.getSize()), xMax + 114, yPos + 10);
-			p5.text(n.getId(), xMax + 150, yPos + 10);
-			//		p5.textAlign(PApplet.RIGHT);
-			//		p5.text(n.getId(), xMax + 110, yPos + 10);
-		}
-		private void drawHovered() {
-//			int yPos = 50 + (n.getId() * 14);
-			p5.noFill(); p5.stroke(0xffffffff);
-			p5.ellipse(x, y, r, r);
-			p5.fill(0xff333333);
-			p5.stroke(n.getColor(), 100, 100);
-			p5.ellipse(xPos - 14, y + 7, 3, 3);
-		}
-		private void drawActive() {
-
-			p5.fill(360, 50); p5.stroke(360);
-			p5.ellipse(x, y, r + 4, r + 4);
-			p5.fill(0xffff0000); p5.stroke(0xffff0000);
-			p5.noStroke();
-			p5.fill(0xff666666);
-			p5.rect(xMax + 100, y + 1, 1, 12);
-			p5.fill(0xff999999);
+			p5.text(name, oX, oY + 10);
+			p5.text(App.DF1.format(size) + "sq.m", +124, oY + 10);
+			p5.textAlign(PApplet.RIGHT);
+			p5.text(App.DF1.format(areaPercentage) + "%", +190, oY + 10);
 			p5.textAlign(PApplet.LEFT);
-			p5.text(n.getName(), xPos + 20, y + 10);
-			p5.text(App.DF1.format(n.getSize()), xPos + 114, y + 10);
-			p5.text(n.getId(), xPos + 150, y + 10);
-		}
-		private void drawSelected() {
-			p5.fill(360, 25); p5.stroke(SELECTED);
-			p5.ellipse(x, y, r - 4, r - 4);
-			p5.strokeWeight(1);
-		}
-		private void drawLocked() {
-			p5.fill(0, 50); p5.stroke(360);
-			p5.ellipse(x, y, r - 8, r - 8);
 		}
 	}
 

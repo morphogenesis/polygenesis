@@ -1,136 +1,228 @@
 package app.core;
 
+import app.graph.Graph;
+import app.graph.Node;
 import processing.core.PApplet;
-import toxi.geom.*;
+import toxi.geom.Polygon2D;
+import toxi.geom.PolygonClipper2D;
+import toxi.geom.SutherlandHodgemanClipper;
+import toxi.geom.Vec2D;
 import toxi.geom.mesh2d.Voronoi;
-import toxi.physics2d.VerletParticle2D;
-import toxi.physics2d.VerletPhysics2D;
-import toxi.physics2d.behaviors.AttractionBehavior2D;
+import toxi.processing.ToxiclibsSupport;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-import static util.Color.VOR_VERTS;
-
 public class VoronoiDiagram {
-	private App p5;
-	private PolygonClipper2D clipper;
-	private Voronoi voronoi;
-	private ArrayList<VerletParticle2D> particles;
-	private VerletPhysics2D physics;
-	ArrayList<Vec2D> rand;
-	public VoronoiDiagram(App p5) {
-		this.p5 = p5;
-		this.physics = App.PSYS.getPhysics();
-		this.particles = App.PSYS.getParticles();
-		this.clipper = new SutherlandHodgemanClipper(App.PSYS.getBounds().copy());
-		this.voronoi = new Voronoi();
-		rand = new ArrayList<>();
-		for (int i = 0; i < 30; i++) {
-			Vec2D vi = new Vec2D(getClipRect().getRandomPoint());
-			rand.add(vi);
-		}
-	}
+	protected PApplet p5;
+	protected ArrayList<Vec2D> extras = new ArrayList<>();
+	protected PolygonClipper2D clipper = new SutherlandHodgemanClipper(App.PSYS.getBounds());
+	protected ArrayList<Vec2D> voidSites = new ArrayList<>();
+	protected static HashMap<Node, Polygon2D> regionIndex = new HashMap<>();
+	Voronoi voronoi;
+	//	protected ArrayList<Vec2D> cellSites = new ArrayList<>();
+	//	protected ArrayList<Polygon2D> cellRegions = new ArrayList<>(), voidRegions = new ArrayList<>();
+	//	private ArrayList<Node> nodes = Graph.nodes;
+	public VoronoiDiagram(PApplet $p5) { this.p5 = $p5; }
 
-	private Rect getClipRect() {
-		Rect r = new Rect(0, 0, App.WIDTH, App.HEIGHT);
-		r.scale(Gui.vor_clipScale);
-		p5.noFill(); p5.stroke(0xffff00ff);
-		p5.rect(r.getTopLeft().x, r.getTopLeft().y, r.width, r.height);
-		p5.noStroke();
-		return r;
-	}
-
-	private Polygon2D frame() {
-		Rect r = getClipRect().copy().scale(Gui.vor_rectScale);
-		return r.toPolygon2D().increaseVertexCount((int) Gui.vor_perimRes);
-	}
-	private Polygon2D intersectingPoly() {
-		Polygon2D p = new Polygon2D();
-		for (Vec2D v : particles) { p.add(v); }
-		return p.toPolygon2D();
-	}
-
-	private Polygon2D ring() {
-		Circle c = physics.getCurrentBounds().scale(Gui.vor_ringScale).getBoundingCircle();
-		return c.toPolygon2D((int) Gui.vor_perimRes);
-	}
-	private List<Vec2D> vecs() {
-		ArrayList<Vec2D> verts = new ArrayList<>();
-		for (Vec2D v : rand) {
-			for (AttractionBehavior2D a : App.PSYS.behaviors) {
-				Circle c = new Circle(a.getAttractor(), a.getRadius());
-				if (c.containsPoint(v)) v.constrain(ring());
-				verts.add(v);
-			}
-		} return verts;
-	}
 	public void draw() {
-		if (Gui.drawVoronoi) {
-			if (Gui.updateVoronoi) {
-				voronoi = new Voronoi();
-				voronoi.addPoints(particles);
-				voronoi.addPoints(vecs());
-				clipper = new SutherlandHodgemanClipper(getClipRect());
+		if ((Gui.drawVoronoi) && (!Graph.nodes.isEmpty())) {
+			voronoi = new Voronoi();
+			for (Node n : Graph.nodes) { voronoi.addPoint(n.getParticle2D()); }
+			for (Polygon2D poly : voronoi.getRegions()) {
+				poly = clipper.clipPolygon(poly);
+				if (poly.vertices.size() < 3) return;
+				if (!poly.isClockwise()) poly.flipVertexOrder();
+				if (Gui.offsetVoronoi) poly.offsetShape(-2);
+				if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
+				if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
+				if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
+				if (Gui.drawVorInfo) drawDetailInfo(poly, 360);
 			}
-			p5.noFill(); p5.noStroke();
-			for (Polygon2D p : voronoi.getRegions()) {
-				p = clipper.clipPolygon(p);
-				if (p.intersectsPolygon(intersectingPoly())) {
-					if (Gui.drawVorPoly) {p5.stroke(0xffe5cdab); p5.fill(330, 3, 27, 100); App.GFX.polygon2D(p); }
-					if (Gui.drawVorBez) {
-						p5.stroke(0xffeaeaea); p5.fill(0xff686463);
-						for (Vec2D v : particles) {
-							if (p.containsPoint(v)) {
-								p5.stroke(0xffe5cdab); p5.fill(0xff444243); drawBezier(p);
-								break;
-							}
-						}
-					}
-				} if (Gui.drawVorVec) { p5.stroke(VOR_VERTS); p5.noFill(); for (Vec2D vec : p.vertices) { App.GFX.circle(vec, 2); } }
+
+			for (Vec2D v : voronoi.getSites()) {
+				int index = voronoi.getSites().indexOf(v);
+				if (Gui.drawVorInfo) drawDetailInfo2(v, index, 360);
 			}
-			p5.fill(0xff000000); p5.noStroke();
-			if (Gui.drawPhysInfo) { drawInfo(); }
-			drawExtras();
+			if (Gui.drawVorInfo) drawInfo(0xff666666);
 		}
 	}
-	private void drawExtras() {
-		p5.stroke(0xffffffff);
-		p5.noFill();
-		App.GFX.polygon2D(frame());
-		App.GFX.polygon2D(ring());
+
+	private void drawPoly(Polygon2D poly, int stroke, int fill) {
+		if (fill == -1) { p5.noFill(); } else p5.fill(fill);
+		if (stroke == -1) { p5.noStroke(); } else p5.stroke(stroke);
+		ToxiclibsSupport gfx = App.GFX;
+		gfx.polygon2D(poly);
+		p5.noStroke();
 		p5.noFill();
 	}
 
-	private void drawBezier(Polygon2D p) {
-		List<Vec2D> v = p.vertices;
-		int j = v.size();
-		if (j >= 3) {
-			p5.beginShape();
-			p5.vertex((v.get(j - 1).x + v.get(0).x) / 2, (v.get(j - 1).y + v.get(0).y) / 2);
-			for (int i = 0; i < j; i++) { p5.bezierVertex(v.get(i).x, v.get(i).y, v.get(i).x, v.get(i).y, (v.get((i + 1) % j).x + v.get(i).x) / 2, (v.get((i + 1) % j).y + v.get(i).y) / 2); }
-			p5.endShape(PApplet.CLOSE);
+	private void drawBezier(Polygon2D poly, int stroke, int fill) {
+		if (fill == -1) { p5.noFill(); } else p5.fill(fill);
+		if (stroke == -1) { p5.noStroke(); } else p5.stroke(stroke);
+
+		List<Vec2D> list = poly.vertices;
+		Vec2D vA = list.get(0);
+		Vec2D vZ = list.get(list.size() - 1);
+		Vec2D origin = new Vec2D((vZ.x + vA.x) / 2, (vZ.y + vA.y) / 2);
+
+		p5.beginShape();
+		p5.vertex(origin.x, origin.y);
+		for (int i = 0; i < list.size(); i++) {
+			Vec2D vi = list.get(i);
+			Vec2D vj = list.get((i + 1) % list.size());
+			p5.bezierVertex(vi.x, vi.y, vi.x, vi.y, (vj.x + vi.x) / 2, (vj.y + vi.y) / 2);
+		}
+		p5.endShape(PApplet.CLOSE);
+
+		p5.noFill();
+		p5.noStroke();
+	}
+
+	private void drawInfo(int fill) {
+/*		p5.fill(fill);
+		for (int i = 0; i < cellRegions.size(); i++) {
+			Polygon2D region = cellRegions.get(i);
+			int area = (int) (Math.abs(region.getArea()) / App.world_scale);
+			Vec2D centroid = region.getCentroid();
+			p5.textAlign(PConstants.CENTER);
+			p5.text(area, centroid.x, centroid.y);
+			p5.textAlign(PConstants.LEFT);
+			p5.text(area, 1600, (10 * i) + 500);
+		} p5.noFill();*/
+	}
+
+	private void drawHandles(Polygon2D poly, int stroke, int fill) {
+		if (fill == -1) { p5.noFill(); } else p5.fill(fill);
+		if (stroke == -1) { p5.noStroke(); } else p5.stroke(stroke);
+		for (Vec2D v : poly.vertices) {p5.ellipse(v.x, v.y, 4, 4);}
+		p5.noStroke();
+		p5.noFill();
+	}
+	private void drawDetailInfo(Polygon2D poly, int fill) {
+		float x = poly.getCentroid().x;
+		float y = poly.getCentroid().y;
+		p5.fill(fill);
+		p5.text(poly.getNumVertices(), x, y);
+		p5.noFill();
+	}
+	private void drawDetailInfo2(Vec2D v, int index, int fill) {
+		p5.fill(fill);
+		p5.text(index, v.x + 10, v.y);
+		p5.noFill();
+	}
+
+	public void addExtras(int cnt) {
+		for (int i = 0; i < cnt; i++) {
+			Vec2D e = new Vec2D(App.PSYS.getBounds().getRandomPoint());
+			extras.add(e);
+			voidSites.add(e);
+			App.PSYS.addAttractor(e);
 		}
 	}
 
-	private void drawInfo() {
-		int index = 0;
-		for (Polygon2D p : voronoi.getRegions()) {
-			if (!p.isClockwise()) p.flipVertexOrder();
-			Vec2D centroid = p.getCentroid();
-			float x = centroid.x;
-			float y = centroid.y;
-			index++;
-			int numVerts = p.getNumVertices();
-			int circumference = (int) p.getCircumference();
-			int area = (int) p.getArea();
-			boolean isConvex = p.isConvex();
-			boolean isClockwise = p.isClockwise();
-
-			p5.text("[" + index + "] [" + isClockwise + "] [" + isConvex + "]", x, y);
-			p5.text("verts: " + numVerts, x, y + 10);
-			p5.text("circumference: " + circumference, x, y + 20);
-			p5.text("area: " + area, x, y + 30);
+	public void addPerim(int res) {
+		for (int i = 0; i < App.PSYS.getBounds().height; i += res) {
+			Vec2D l = new Vec2D(App.PSYS.getBounds().getLeft() + 20, i + App.PSYS.getBounds().getTop());
+			Vec2D r = new Vec2D(App.PSYS.getBounds().getRight() - 20, i + App.PSYS.getBounds().getTop());
+			extras.add(l); extras.add(r);
+			voidSites.add(l); voidSites.add(r);
+			App.PSYS.addAttractor(l); App.PSYS.addAttractor(r);
 		}
+		for (int j = 0; j < App.PSYS.getBounds().width; j += res) {
+			Vec2D t = new Vec2D(j + App.PSYS.getBounds().getLeft(), App.PSYS.getBounds().getTop() + 20);
+			Vec2D b = new Vec2D(j + App.PSYS.getBounds().getLeft(), App.PSYS.getBounds().getBottom() - 20);
+			extras.add(t); extras.add(b);
+			voidSites.add(t); voidSites.add(b);
+			App.PSYS.addAttractor(t); App.PSYS.addAttractor(b);
+		}
+	}
+	public void addCell(Node n) {
+
 	}
 }
+
+/*
+	public void draw() {
+		if (Gui.drawVoronoi) {
+			voronoi = new Voronoi();
+			for (Node n : Graph.nodes) { voronoi.addPoint(n.getParticle2D()); }
+//			for (VerletParticle2D v : App.PSYS.getPhysics().particles) { voronoi.addPoint(v); }
+//			for (AttractionBehavior2D a : App.PSYS.attractors) { voronoi.addPoint(a.getAttractor()); }
+//			cellRegions.clear(); voidRegions.clear();
+			for (int i = 0; i <= voronoi.getRegions().size(); i++) {
+				Polygon2D poly = voronoi.getRegions().get(i);
+				poly = clipper.clipPolygon(poly);
+				if (poly.vertices.size() < 3) return;
+				if (!poly.isClockwise()) poly.flipVertexOrder();
+				poly.offsetShape(-2);
+//				poly.smooth(0.01f,0.05f);
+				if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
+				if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
+				if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
+				if (Gui.drawVorInfo) drawDetailInfo(poly, i, 360);
+			}
+		for (Polygon2D poly : voronoi.getRegions()) {
+				int index = voronoi.getRegions().indexOf(poly);
+				poly = clipper.clipPolygon(poly);
+				if (poly.vertices.size() < 3) return;
+				if (!poly.isClockwise()) poly.flipVertexOrder();
+				poly.offsetShape(-2);
+//				poly.smooth(0.01f,0.05f);
+				if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
+				if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
+				if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
+				if (Gui.drawVorInfo) drawDetailInfo(poly,index, 360);
+			}
+if (Gui.drawVorInfo) drawInfo(0xff666666);
+		}
+		}
+
+* */
+
+	/*	private void drawBezier(Polygon2D poly, int stroke, int fill) {
+		p5.fill(fill); if (fill == -1) p5.noFill();
+		p5.stroke(stroke); if (stroke == -1) p5.noStroke();
+
+		List<Vec2D> list = poly.vertices;
+		int il = list.size();
+		p5.beginShape();
+		p5.vertex((list.get(il - 1).x + list.get(0).x) / 2, (list.get(il - 1).y + list.get(0).y) / 2);
+		for (int i = 0; i < il; i++) { p5.bezierVertex(list.get(i).x, list.get(i).y, list.get(i).x, list.get(i).y, (list.get((i + 1) % il).x + list.get(i).x) / 2, (list.get((i + 1) % il).y + list.get(i).y) / 2); }
+		p5.endShape(PApplet.CLOSE);
+
+		p5.noFill(); p5.noStroke();
+	}*/
+//	public void addVoids(ArrayList<Vec2D> v) { voidSites.addAll(v); }
+//	public void addVoid(Vec2D v) {voidSites.add(v);}
+//	public void addCells(ArrayList<Vec2D> cells) { cellSites.addAll(cells); }
+//	public void addCell(Vec2D point) { cellSites.add(point); }
+/*	private void drawBezierG(Polygon2D poly, int stroke, int fill) {
+		p5.fill(fill); if (fill == -1) p5.noFill();
+		p5.stroke(stroke); if (stroke == -1) p5.noStroke();
+		ToxiclibsSupport gfx = App.GFX;
+		poly.increaseVertexCount(40);
+		poly.smooth(.5f, .5f);
+		gfx.polygon2D(poly);
+		gfx.polygon2D(poly);
+	}
+	float MAX_IMPACT = 0.5f;*/
+/*
+	private void drawBezierC(Polygon2D poly, int stroke, int fill) {
+		p5.fill(fill); if (fill == -1) p5.noFill();
+		p5.stroke(stroke); if (stroke == -1) p5.noStroke();
+		Vec2D[] points = new Vec2D[poly.vertices.size()];
+		p5.beginShape();
+		for (int i = 0; i < poly.vertices.size(); i++) { points[i] = new Vec2D(poly.vertices.get(i)); p5.vertex(points[i].x, points[i].y); }
+		p5.endShape();
+		p5.stroke(0);
+		for (int i = 0; i < points.length; i++) { p5.ellipse(points[i].x, points[i].y, 5, 5); }
+		float tight = (p5.mouseX - p5.height / 2.0f) / (p5.height / 2.0f) * MAX_IMPACT;
+		Spline2D spline = new Spline2D(points, null, tight);
+		LineStrip2D vertices = spline.toLineStrip2D(32);
+		p5.beginShape();
+		for (Vec2D v : vertices) { p5.vertex(v.x, v.y); }
+		p5.endShape();
+	}
+*/

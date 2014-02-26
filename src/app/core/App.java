@@ -19,6 +19,7 @@ import java.util.Date;
 //import util.xml.XMLflowgraph;
 
 public class App extends PApplet {
+	public static App P5;
 	public static final String timestamp = new SimpleDateFormat("yyyy-MM-dd'v'HH").format(new Date());
 	public static final String filename = "thesis_" + timestamp + ".xml";
 	public static final String filepath = "./data/" + filename;
@@ -48,8 +49,10 @@ public class App extends PApplet {
 	public static void __rebelReload() {
 		System.out.println("********************  rebelRyeload  ********************");
 		System.out.println("Current File: " + filepath);
+		Gui.initGUI(App.P5);
 	}
 	public void setup() {
+		P5 = this;
 		pfont = createFont("SourceCodePro", 10);
 		bfont = createFont("SourceCodePro", 14);
 		GFX = new ToxiclibsSupport(this);
@@ -85,28 +88,36 @@ public class App extends PApplet {
 		Gui.controlEvent(this, theEvent);
 	}
 	public void keyPressed() {
+		if (key == TAB) {Gui.isEditMode = !Gui.isEditMode;}
 		if (key == CODED) {
 			if (keyCode == SHIFT) { isShiftDown = true; }
-			if (keyCode == CONTROL) {isCtrlDown = true;}
+			if (keyCode == CONTROL) { isCtrlDown = true;}
 		}
-		switch (key) {
-			case '1': Gui.drawVorPoly = !Gui.drawVorPoly; break;
-			case '2': Gui.drawVorBez = !Gui.drawVorBez; break;
-			case '3': Gui.drawVorVec = !Gui.drawVorVec; break;
-			case '4': Gui.drawPhysInfo = !Gui.drawPhysInfo; break;
-			case 'c':
-				break;
-			case 'a': GEDIT.createNewNode(Gui.nameTextfield.getStringValue(), Gui.radiusSlider.getValue(), mousePos()); Gui.toggleObjProperties(); break;
-			case 'f': GEDIT.createNewEdge(); break;
-			case 'x': GEDIT.deleteNode(); break;
-			case 'z': GEDIT.deleteEdges(); break;
-			case 'q': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), true); break;
-			case 'w': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), false); break;
-			case 'l': GEDIT.lockNode(); break;
+
+		if (Gui.isEditMode) {
+			switch (key) {
+//				case TAB: isEditMode = !isEditMode; break;
+				case '1': Gui.drawVorPoly = !Gui.drawVorPoly; break;
+				case '2': Gui.drawVorBez = !Gui.drawVorBez; break;
+				case '3': Gui.drawVorVec = !Gui.drawVorVec; break;
+				case '4': Gui.drawPhysInfo = !Gui.drawPhysInfo; Gui.drawVorInfo = !Gui.drawVorInfo; break;
+				case 'a': GEDIT.createNewNode(Gui.nameTextfield.getStringValue(), Gui.radiusSlider.getValue(), mousePos()); Gui.toggleObjProperties(); break;
+				case 'f': GEDIT.createNewEdge(); break;
+				case 'x': GEDIT.deleteNode(); break;
+				case 'z': GEDIT.deleteEdges(); break;
+				case 'q': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), true); break;
+				case 'w': GEDIT.createNewBranch(Gui.capacitySlider.getValue(), false); break;
+				case 'l': GEDIT.lockNode(); break;
+				case 'o': if (!Editor.hasActiveNode()) VSYS.addPerim(50);
+				case 'p': if (!Editor.hasActiveNode()) VSYS.addExtras(9);
+			}
 		}
 	}
 	public void keyReleased() {
-		if (key == CODED && keyCode == SHIFT) { isShiftDown = false; }
+		if (key == CODED) {
+			if (keyCode == SHIFT) { isShiftDown = false; }
+			if (keyCode == CONTROL) { isCtrlDown = false; }
+		}
 	}
 	public void mouseDragged() {
 		if (mouseButton == RIGHT) GEDIT.mouseDragged(mousePos());

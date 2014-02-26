@@ -32,6 +32,8 @@ public class PSys {
 	private HashMap<String, String> info = new HashMap<>();
 	private App p5;
 	private ArrayList<VerletSpring2D> cloudMindist = new ArrayList<>();
+	private ArrayList<VerletParticle2D> attractorParticles = new ArrayList<>();
+	public ArrayList<AttractionBehavior2D> attractors = new ArrayList<>();
 	public PSys(App p5) {
 		this.p5 = p5;
 		bounds = new Rect(10, 10, p5.width - 20, p5.height - 20);
@@ -117,6 +119,23 @@ public class PSys {
 
 			cloudAttractors.add(a);
 			cloudParticles.add(p);
+		}
+	}
+	public void addAttractor(Vec2D pos) {
+		VerletParticle2D p = new VerletParticle2D(pos);
+		AttractionBehavior2D a = new AttractionBehavior2D(p, 200, 1f);
+		physics.addParticle(p);
+		physics.addBehavior(a);
+		attractorParticles.add(p);
+		attractors.add(a);
+		for (int i = 1; i < attractorParticles.size(); i++) {
+			VerletParticle2D pi = attractorParticles.get(i);
+			for (int j = 0; j < i; j++) {
+				VerletParticle2D pj = attractorParticles.get(j);
+				VerletMinDistanceSpring2D s = new VerletMinDistanceSpring2D(pi, pj, 100, 0.1f);
+				minDistSprings.add(s);
+				physics.addSpring(s);
+			}
 		}
 	}
 	public void addCloudMinDist() {
