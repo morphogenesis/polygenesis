@@ -63,7 +63,7 @@ public class App extends PApplet {
 		PSYS = new PSys(this);
 		CLOUD = new Cloud(this);
 		GRAPH = new Graph();
-		Graph.rebuild();
+//		Graph.rebuild();
 		GEDIT = new Editor();
 		VSYS = new VoronoiDiagram(this);
 		MBALL = new Metaball(this);

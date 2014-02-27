@@ -213,11 +213,11 @@ public class Gui {
 		CP5.end();
 		CP5.begin(10, 12);
 		CP5.addSlider("setMetaVisc").setValue(Metaball.viscosity).setRange(1, 3).setDecimalPrecision(1).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaThresh").setValue(Metaball.threshold).setRange(0.001f, 0.5f).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaStep").setValue(Metaball.stepping).setRange(5, 100).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaThresh").setValue(Metaball.threshold).setRange(0.0f, 0.03f).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaStep").setValue(Metaball.stepping).setRange(.01f, 50).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
 		CP5.addSlider("setMetaTrack").setValue(Metaball.tracking).setRange(0.001f, 2).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
 		CP5.addSlider("setMetaMaxIter").setValue(Metaball.maxIter).setRange(2, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaMaxPts").setValue(Metaball.maxPts).setRange(2, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxPts").setValue(Metaball.maxPts).setRange(2, 50).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
 		CP5.addSlider("setMetaMaxTrackIter").setValue(Metaball.maxTrackIter).setRange(1, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
 		CP5.addSlider("setMetaBorderStep").setValue(Metaball.borderStepSize).setRange(0.001f, 50).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
 		CP5.end();
@@ -268,6 +268,7 @@ public class Gui {
 		voronoi_options.add("drawVorBez", 1).setCaptionLabel("Draw Bezier");
 		voronoi_options.add("drawVorVec", 1).setCaptionLabel("Draw Handles");
 		voronoi_options.add("drawVorInfo", 1).setCaptionLabel("Draw Info");
+		voronoi_options.add("drawVorCol", 1).setCaptionLabel("Draw Info");
 		voronoi_options.add("isVorOffset", 1).setCaptionLabel("Is Offset");
 		voronoi_options.add("isVorUpdating", 1).setCaptionLabel("Is Updating");
 		MultiListButton metaball_options = fileMenu.add("metaballButton", 6).setWidth(130).setHeight(20); metaball_options.setCaptionLabel("Metaball");

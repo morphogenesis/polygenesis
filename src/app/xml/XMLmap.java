@@ -11,7 +11,7 @@ import java.util.ArrayList;
  */
 @XmlRootElement(name = "flowgraph")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class XmlMap {
+public class XMLmap {
 
 	@XmlElement(name = "node")
 	private ArrayList<Node> nodes = new ArrayList<>();

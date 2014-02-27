@@ -7,6 +7,7 @@ import processing.core.PApplet;
 import toxi.geom.*;
 import toxi.geom.mesh2d.Voronoi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class VoronoiDiagram {
@@ -16,31 +17,32 @@ public class VoronoiDiagram {
 	//	private final ArrayList<Vec2D> voidSites = new ArrayList<>();
 	private Voronoi voronoi;
 	public VoronoiDiagram(PApplet $p5) { this.p5 = $p5; }
+	public static ArrayList<Vec2D> points = new ArrayList<>();
 
 	public void draw() {
 		if ((Gui.drawVoronoi) && (!Graph.nodes.isEmpty())) {
 			voronoi = new Voronoi();
 			for (Node n : Graph.nodes) { voronoi.addPoint(n.getParticle2D()); }
-			for (Vec2D v : PSys.attractorParticles) { voronoi.addPoint(v); }
+			if (!points.isEmpty()) for (Vec2D v : points) { if (v != null) voronoi.addPoint(v); }
+//			voronoi.addPoints(points);
+//			for (Vec2D v : PSys.attractorParticles) { voronoi.addPoint(v); }
+//			for (Vec2D v : points) { voronoi.addPoint(v); }
 
 			for (Polygon2D poly : voronoi.getRegions()) {
-
 				poly = clipper.clipPolygon(poly);
+				if (poly.vertices.size() < 3) return;
 				for (Node n : Graph.nodes) {
 					if (poly.containsPoint(n.getParticle2D())) {
-						if (poly.vertices.size() < 3) return;
 						if (!poly.isClockwise()) poly.flipVertexOrder();
 						if (Gui.isVorOffset) poly.offsetShape(Gui.setVorOffset);
-						if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
+						if (Gui.drawVorPoly) drawPoly(poly, 0xff222222, -1);
 						if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
 						if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
 						if (Gui.drawVorInfo) drawRegionInfo(poly, 0xff666666);
 					}
 				}
 			}
-			for (Vec2D v : voronoi.getSites()) {
-				if (Gui.drawVorInfo) drawSiteInfo(v, 0xffffffff);
-			}
+			for (Vec2D v : voronoi.getSites()) { if (Gui.drawVorInfo) drawSiteInfo(v, 0xffffffff); }
 		}
 	}
 

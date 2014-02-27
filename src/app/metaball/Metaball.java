@@ -1,5 +1,6 @@
 package app.metaball;
 
+import app.core.VoronoiDiagram;
 import app.graph.Graph;
 import app.xml.Node;
 import processing.core.PApplet;
@@ -12,50 +13,47 @@ import java.util.ArrayList;
 public class Metaball {
 	private PApplet p5;
 	private ArrayList<MVec2D> MVec2Ds = new ArrayList<>();
-	private ArrayList<Vec2D> points = new ArrayList<>();
-	public static float viscosity = 2;
-	public static float viscosityNorm = 1.0f / viscosity;
-	public static float minSize = 1e32f;
-	public static float minThreshold;
-	public static float threshold = 0.003f;
-	public static float stepping = 20;
-	//	public static float lineDistance = 5;
+	public static ArrayList<Vec2D> points = new ArrayList<>();
 	public static boolean isMetaDynamic;
 	public static boolean isMetaUpdating;
 	public static boolean drawMetaLine;
 	public static boolean drawMetaPnt;
 	public static boolean drawMetaEdgePos;
 	public static boolean drawMetaPos0;
+	public static float borderStepSize = 0.01f;/*7.5*/
+	public static float viscosity = 2;
+	public static float viscosityNorm = 1.0f / viscosity;
+	public static float minThreshold;
+	public static float minSize = 1e32f;
+	public static float threshold = 0.003f;
+	public static float stepping = 20;
 	public static float tracking = 0.25f;
-	public static int maxIter = 200;
-	public static int maxPts = 500;
-	public static int maxTrackIter = 10;
-	public static float borderStepSize = 0.01f;
 
+	public static int maxIter = 100;
+	public static int maxPts = 25;
+	public static int maxTrackIter = 10;/*160*/
 	public Metaball(PApplet p5) {
 		this.p5 = p5;
 	}
+
 	public void addParticle(Vec2D v, float w) {
 		MVec2D mv = new MVec2D(v);
-		mv.setWeight(w / 2);
+		mv.setWeight(w);
+		if (mv.getWeight() < minSize) minSize = mv.getWeight();
+		minThreshold = (float) Math.pow(minSize / threshold, viscosityNorm);
 		MVec2Ds.add(mv);
 	}
 	public void update() {
 		MVec2Ds = new ArrayList<>();
-		for (Node n : Graph.nodes) {
-			addParticle(n.getParticle2D(), n.getRadius());
-		}
-		for (MVec2D mp : MVec2Ds) {
-
-			if (mp.getWeight() < minSize) minSize = mp.getWeight();
-			minThreshold = (float) Math.pow(minSize / threshold, viscosityNorm);
-		}
+		for (Node n : Graph.nodes) { addParticle(n.getParticle2D(), n.getRadius()); }
+		for (MVec2D mp : MVec2Ds) { if (mp.getWeight() < minSize) minSize = mp.getWeight(); minThreshold = (float) Math.pow(minSize / threshold, viscosityNorm); }
 		draw();
 	}
 
 	public void draw() {
 		if ((!MVec2Ds.isEmpty()) && (isMetaUpdating)) {
 			for (MVec2D mp : MVec2Ds) resetMetaParticle(mp);
+			points = new ArrayList<>();
 			int loopIndex = 0;
 			while (loopIndex < maxIter) {
 				loopIndex++;
@@ -65,19 +63,35 @@ public class Metaball {
 					m.edgePos = rungeKutta2(temp, stepping);
 					if (drawMetaLine) {
 						p5.stroke(0xffffffff);
-						p5.line(temp.x, temp.y, m.edgePos.x, m.edgePos.y);
+						p5.line(m.pos0.x, m.pos0.y, m.edgePos.x, m.edgePos.y);
 					}
-					points.add(m.edgePos);
+					if (loopIndex % 2 == 0) { points.add(m.edgePos); }
+/*
 					if (points.size() > maxPts) points.remove(0);
-					isTracked(loopIndex, m);
+*/
+					VoronoiDiagram.points = points;
+					for (MVec2D mpb : MVec2Ds) {
+						float distanceSq = mpb.pos0.distanceToSquared(m.edgePos);
+						if ((mpb != m || loopIndex > 3) && (distanceSq < (stepping * stepping))) m.isTracked = false;
+					}//	isTracked(loopIndex, m);
+//					drawMetaparticle(m);
 				}
 			}
-			if (drawMetaPnt) { for (Vec2D a : points) { p5.stroke(360, 100); p5.ellipse(a.x, a.y, 2, 2); } }
-			if (drawMetaPos0) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xff4cc3c7); p5.ellipse(mp.pos0.x, mp.pos0.y, 4, 4); } }
-			if (drawMetaEdgePos) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xff888888); p5.ellipse(mp.edgePos.x, mp.edgePos.y, 4, 4); } }
-			if (drawMetaLine) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xffffff00); p5.line(mp.edgePos.x, mp.edgePos.y, mp.pos0.x, mp.pos0.y); } }
+//			if (drawMetaPos0) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xff4cc3c7); p5.ellipse(mp.pos0.x, mp.pos0.y, 4, 4); } }
+//			if (drawMetaEdgePos) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xff888888); p5.ellipse(mp.edgePos.x, mp.edgePos.y, 4, 4); } }
+//			if (drawMetaLine) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xffffff00); p5.line(mp.edgePos.x, mp.edgePos.y, mp.pos0.x, mp.pos0.y); } }
 		}
+		if (drawMetaPnt) { for (Vec2D a : points) { p5.stroke(360, 20); p5.ellipse(a.x, a.y, 2, 2); } }
 	}
+
+	private void drawMetaparticle(MVec2D mp) {
+		p5.stroke(0xffff0000); p5.ellipse(mp.x, mp.y, mp.weight, mp.weight);
+		if (drawMetaPos0) { p5.stroke(0xffff66ff); p5.ellipse(mp.pos0.x, mp.pos0.y, 4, 4); }
+		if (drawMetaEdgePos) { p5.strokeWeight(2); p5.stroke(0xff66ffff); p5.point(mp.edgePos.x, mp.edgePos.y); p5.strokeWeight(1); p5.text(MVec2Ds.indexOf(mp), mp.x, mp.y); }
+//		if (drawMetaLine) {p5.stroke(0xffffff66); p5.line(mp.edgePos.x, mp.edgePos.y, mp.pos0.x, mp.pos0.y); }
+		p5.noStroke();
+	}
+
 	private void isTracked(int loopIndex, MVec2D m) {
 		for (MVec2D mpb : MVec2Ds) {
 			float distanceSq = mpb.pos0.distanceToSquared(m.edgePos);

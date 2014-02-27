@@ -3,7 +3,7 @@ package app.graph;
 import app.core.App;
 import app.xml.Edge;
 import app.xml.Node;
-import app.xml.XmlMap;
+import app.xml.XMLmap;
 import toxi.physics2d.VerletParticle2D;
 import toxi.physics2d.VerletSpring2D;
 import toxi.physics2d.behaviors.AttractionBehavior2D;
@@ -20,7 +20,7 @@ import java.util.HashMap;
  * Created on 2/13/14.
  */
 public class Graph {
-	private static XmlMap Map = new XmlMap();
+	private static XMLmap Map = new XMLmap();
 	private static HashMap<Integer, Node> nodeIndex = new HashMap<>();
 	private static HashMap<Integer, ArrayList<Node>> edgeIndex = new HashMap<>();
 	public static ArrayList<Node> nodes;
@@ -30,7 +30,7 @@ public class Graph {
 		nodes = new ArrayList<>(); edges = new ArrayList<>();
 	}
 	public static void build() {
-		Map = new XmlMap();
+		Map = new XMLmap();
 		Map.setNodes(nodes);
 		Map.setEdges(edges);
 		edgeIndex = new HashMap<>();
@@ -80,7 +80,7 @@ public class Graph {
 		System.out.println("Writing XML file..." + file.getPath());
 		System.out.println("Writing static XML file..." + staticFile.getPath());
 		try {
-			JAXBContext jc = JAXBContext.newInstance(XmlMap.class);
+			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
 			Marshaller m = jc.createMarshaller();
 			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			m.marshal(Map, System.out);
@@ -91,11 +91,11 @@ public class Graph {
 	}
 	private static void readFromXML() {
 		System.out.println("Reading from XML file...");
-		XmlMap map;
+		XMLmap map;
 		try {
-			JAXBContext jc = JAXBContext.newInstance(XmlMap.class);
+			JAXBContext jc = JAXBContext.newInstance(XMLmap.class);
 			Unmarshaller um = jc.createUnmarshaller();
-			map = (XmlMap) um.unmarshal(new File(App.staticFilepath));
+			map = (XMLmap) um.unmarshal(new File(App.staticFilepath));
 			if (map.getNodes() != null) for (Node n : map.getNodes()) { System.out.println("N [" + n.getId() + "] " + n.getName()); }
 			if (map.getEdges() != null) for (Edge e : map.getEdges()) { System.out.println("E [" + e.getFrom() + " <-> " + e.getTo() + "]"); }
 			Map = map;
@@ -149,8 +149,8 @@ public class Graph {
 		return nodeIndex.get(id);
 	}
 }
-//	public static XmlMap getMap() { return Map; }
-//	public static void setMap(XmlMap Map) { Map = Map; }
+//	public static XMLmap getMap() { return Map; }
+//	public static void setMap(XMLmap Map) { Map = Map; }
 /*	public static void addEdge(Edge s) {
 		if (getEdge(s.getA(), s.getB()) == null) { buildEdge(s); }
 	}*/
