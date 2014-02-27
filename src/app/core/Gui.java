@@ -2,6 +2,8 @@ package app.core;
 
 import app.graph.Editor;
 import app.graph.Graph;
+import app.metaball.Metaball;
+import app.phys.Cloud;
 import app.phys.PSys;
 import app.xml.Node;
 import controlP5.*;
@@ -76,8 +78,6 @@ public class Gui {
 	public static float setVorOffset = -2;
 	/*	private static float vor_ringScale = 1;	private static float vor_rectScale = 1;	private static float vor_intersectorScale = 1;*/
 
-	public static boolean drawCloud;
-
 	/**
 	 * Cloud
 	 */
@@ -86,7 +86,9 @@ public class Gui {
 	public static float cloudVecWgt = .5f;
 	public static float cloudMinScl = 100;
 	public static float cloudMinStr = -1;
-	public static boolean isCloudUpdating;
+	public static boolean isCloudUpdating = true;
+	public static boolean drawCloud = true;
+	private static Group metaGroup;
 
 	public static void controlEvent(App app, ControlEvent theEvent) {
 		if (!theEvent.isGroup()) {
@@ -136,8 +138,10 @@ public class Gui {
 				case "setVorClipscale": setVorClipscale = theValue; break;
 				case "setVorOffset": setVorOffset = theValue; break;
 				/** Cloud */
-				case "doAddCloud": App.CLOUD.addCloud(); break;
-				case "doAddCloudMind": App.CLOUD.addCloudMinDist(); break;
+				case "doAddCloud": Cloud.addCloud(); break;
+				case "doAddCloudPerim": Cloud.addPerimeterVecs(50); break;
+				case "doAddCloudRand": Cloud.addRandomVecs(9); break;
+				case "doAddCloudMind": Cloud.addCloudMinDist(); break;
 				case "setCloudVecWgt": cloudVecWgt = theValue; break;
 				case "setCloudBhvScl": cloudBhvScl = theValue; break;
 				case "setCloudBhvStr": cloudBhvStr = theValue; break;
@@ -146,7 +150,24 @@ public class Gui {
 				case "isCloudUpdating": isCloudUpdating = !isCloudUpdating; break;
 				case "drawCloud": drawCloud = !drawCloud; break;
 
-				default: System.out.println("Missing ControlEvent [" + theEvent.getController().getName() + "=" + theValue + "]"); break;
+				case "isMetaUpdating": Metaball.isMetaUpdating = !Metaball.isMetaUpdating; break;
+				case "isMetaDynamic": Metaball.isMetaDynamic = !Metaball.isMetaDynamic; break;
+				case "drawMetaLine": Metaball.drawMetaLine = !Metaball.drawMetaLine; break;
+				case "drawMetaPnt": Metaball.drawMetaPnt = !Metaball.drawMetaPnt; break;
+				case "drawMetaEdgePos": Metaball.drawMetaEdgePos = !Metaball.drawMetaEdgePos; break;
+				case "drawMetaPos0": Metaball.drawMetaPos0 = !Metaball.drawMetaPos0; break;
+				case "setMetaVisc": Metaball.viscosity = theValue; break;
+				case "setMetaThresh": Metaball.threshold = theValue; break;
+				case "setMetaStep": Metaball.stepping = theValue; break;
+				case "setMetaTrack": Metaball.tracking = theValue; break;
+				case "setMetaMaxIter": Metaball.maxIter = (int) theValue; break;
+				case "setMetaMaxPts": Metaball.maxPts = (int) theValue; break;
+				case "setMetaMaxTrackIter": Metaball.maxTrackIter = (int) theValue; break;
+				case "setMetaBorderStep": Metaball.borderStepSize = theValue; break;
+
+				default: if (theEvent.getController() != fileMenu) {
+					System.out.println("Missing ControlEvent [" + theEvent.getController().getName() + "=" + theValue + "]");
+				} break;
 			}
 		}
 	}
@@ -163,13 +184,14 @@ public class Gui {
 		guiStyles();
 		/** Accordion */
 		accordion = CP5.addAccordion("acc").setPosition(0, 0).setWidth(220).setCollapseMode(Accordion.MULTI).setMinItemHeight(32);
-		accordion.addItem(physGroup).addItem(vorGroup).addItem(cloudGroup).addItem(toolGroup);
+		accordion.addItem(physGroup).addItem(vorGroup).addItem(metaGroup).addItem(cloudGroup).addItem(toolGroup);
 		accordion.open(0, 1, 2);
 	}
 
 	private static void initControllers() {
 		physGroup = CP5.addGroup("physics_group").setBackgroundHeight((9 * 24) + 24);
 		vorGroup = CP5.addGroup("voronoi_group").setBackgroundHeight((3 * 24) + 24);
+		metaGroup = CP5.addGroup("metaball_group").setBackgroundHeight((8 * 24) + 24);
 		cloudGroup = CP5.addGroup("cloud_group").setBackgroundHeight((5 * 24) + 24);
 		toolGroup = CP5.addGroup("tool_group").setBackgroundHeight(140);
 
@@ -190,11 +212,21 @@ public class Gui {
 		CP5.addSlider("setVorOffset").setValue(setVorOffset).setRange(-10, 10).setDecimalPrecision(0).setGroup(vorGroup).linebreak();
 		CP5.end();
 		CP5.begin(10, 12);
-		CP5.addSlider("setCloudVecWgt").setValue(cloudVecWgt).setRange(.1f, 2).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
-		CP5.addSlider("setCloudBhvScl").setValue(cloudBhvScl).setRange(10, 500).setDecimalPrecision(0).setGroup(cloudGroup).linebreak();
-		CP5.addSlider("setCloudBhvStr").setValue(cloudBhvStr).setRange(-1f, 1).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
-		CP5.addSlider("setCloudMinStr").setValue(cloudMinStr).setRange(.01f, 5).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
-		CP5.addSlider("setCloudMinScl").setValue(cloudMinScl).setRange(20, 500).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setMetaVisc").setValue(Metaball.viscosity).setRange(1, 3).setDecimalPrecision(1).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaThresh").setValue(Metaball.threshold).setRange(0.001f, 0.5f).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaStep").setValue(Metaball.stepping).setRange(5, 100).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaTrack").setValue(Metaball.tracking).setRange(0.001f, 2).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxIter").setValue(Metaball.maxIter).setRange(2, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxPts").setValue(Metaball.maxPts).setRange(2, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxTrackIter").setValue(Metaball.maxTrackIter).setRange(1, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaBorderStep").setValue(Metaball.borderStepSize).setRange(0.001f, 50).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.end();
+		CP5.begin(10, 12);
+		CP5.addSlider("setCloudVecWgt").setValue(cloudVecWgt).setRange(.1f, 3).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudBhvScl").setValue(cloudBhvScl).setRange(0, 300).setDecimalPrecision(0).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudBhvStr").setValue(cloudBhvStr).setRange(-3f, 1).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudMinStr").setValue(cloudMinStr).setRange(.001f, 0.05f).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
+		CP5.addSlider("setCloudMinScl").setValue(cloudMinScl).setRange(.1f, 2).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
 		CP5.end();
 		CP5.begin(0, 0);
 		radiusSlider = CP5.addKnob("setSize").setCaptionLabel("Size").addListener(new radiusSliderListener()).setRange(0, 500).setValue(50).setPosition(10, 30).setDecimalPrecision(1).setGroup(toolGroup).hide();
@@ -231,11 +263,6 @@ public class Gui {
 		physics_options.add("doAddMindist", 1).setCaptionLabel("Add MinDist");
 		physics_options.add("doClearMindist", 1).setCaptionLabel("Clear MinDist");
 		physics_options.add("doClearPhysics", 1).setCaptionLabel("Clear Physics");
-		MultiListButton cloud_options = fileMenu.add("cloudButton", 4).setWidth(130).setHeight(20); cloud_options.setCaptionLabel("Cloud");
-		cloud_options.add("drawCloud", 1).setCaptionLabel("Draw Cloud");
-		cloud_options.add("doAddCloud", 1).setCaptionLabel("Add Cloud");
-		cloud_options.add("doAddCloudMind", 1).setCaptionLabel("Add MinDist");
-		cloud_options.add("isCloudUpdating", 1).setCaptionLabel("Is Updating");
 		MultiListButton voronoi_options = fileMenu.add("voronoiButton", 5).setWidth(130).setHeight(20); voronoi_options.setCaptionLabel("Voronoi");
 		voronoi_options.add("drawVorPoly", 1).setCaptionLabel("Draw Polygons");
 		voronoi_options.add("drawVorBez", 1).setCaptionLabel("Draw Bezier");
@@ -243,6 +270,20 @@ public class Gui {
 		voronoi_options.add("drawVorInfo", 1).setCaptionLabel("Draw Info");
 		voronoi_options.add("isVorOffset", 1).setCaptionLabel("Is Offset");
 		voronoi_options.add("isVorUpdating", 1).setCaptionLabel("Is Updating");
+		MultiListButton metaball_options = fileMenu.add("metaballButton", 6).setWidth(130).setHeight(20); metaball_options.setCaptionLabel("Metaball");
+		metaball_options.add("isMetaUpdating", 1).setCaptionLabel("Is Updating");
+		metaball_options.add("isMetaDynamic", 1).setCaptionLabel("Is Dynamic");
+		metaball_options.add("drawMetaLine", 1).setCaptionLabel("Draw Lines");
+		metaball_options.add("drawMetaPnt", 1).setCaptionLabel("Draw Points");
+		metaball_options.add("drawMetaEdgePos", 1).setCaptionLabel("Draw EdgePos");
+		metaball_options.add("drawMetaPos0", 1).setCaptionLabel("Draw Pos0");
+		MultiListButton cloud_options = fileMenu.add("cloudButton", 4).setWidth(130).setHeight(20); cloud_options.setCaptionLabel("Cloud");
+		cloud_options.add("drawCloud", 1).setCaptionLabel("Draw Cloud");
+		cloud_options.add("doAddCloud", 1).setCaptionLabel("Add Cloud");
+		cloud_options.add("doAddCloudPerim", 1).setCaptionLabel("Add Perimeter");
+		cloud_options.add("doAddCloudRand", 1).setCaptionLabel("Add Random");
+		cloud_options.add("doAddCloudMind", 1).setCaptionLabel("Add MinDist");
+		cloud_options.add("isCloudUpdating", 1).setCaptionLabel("Is Updating");
 	}
 	private static void guiStyles() {
 		for (Button b : CP5.getAll(Button.class)) {

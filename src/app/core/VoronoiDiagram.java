@@ -1,7 +1,6 @@
 package app.core;
 
 import app.graph.Graph;
-import app.phys.Cloud;
 import app.phys.PSys;
 import app.xml.Node;
 import processing.core.PApplet;
@@ -22,17 +21,22 @@ public class VoronoiDiagram {
 		if ((Gui.drawVoronoi) && (!Graph.nodes.isEmpty())) {
 			voronoi = new Voronoi();
 			for (Node n : Graph.nodes) { voronoi.addPoint(n.getParticle2D()); }
-			for (Vec2D v : Cloud.particles) { voronoi.addPoint(v); }
+			for (Vec2D v : PSys.attractorParticles) { voronoi.addPoint(v); }
 
 			for (Polygon2D poly : voronoi.getRegions()) {
+
 				poly = clipper.clipPolygon(poly);
-				if (poly.vertices.size() < 3) return;
-				if (!poly.isClockwise()) poly.flipVertexOrder();
-				if (Gui.isVorOffset) poly.offsetShape(Gui.setVorOffset);
-				if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
-				if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
-				if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
-				if (Gui.drawVorInfo) drawRegionInfo(poly, 0xff666666);
+				for (Node n : Graph.nodes) {
+					if (poly.containsPoint(n.getParticle2D())) {
+						if (poly.vertices.size() < 3) return;
+						if (!poly.isClockwise()) poly.flipVertexOrder();
+						if (Gui.isVorOffset) poly.offsetShape(Gui.setVorOffset);
+						if (Gui.drawVorPoly) drawPoly(poly, 0xff444444, -1);
+						if (Gui.drawVorBez) drawBezier(poly, 0xff666666, -1);
+						if (Gui.drawVorVec) drawHandles(poly, 0xffeca860, -1);
+						if (Gui.drawVorInfo) drawRegionInfo(poly, 0xff666666);
+					}
+				}
 			}
 			for (Vec2D v : voronoi.getSites()) {
 				if (Gui.drawVorInfo) drawSiteInfo(v, 0xffffffff);

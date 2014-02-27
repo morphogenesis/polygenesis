@@ -2,6 +2,7 @@ package app.core;
 
 import app.graph.Editor;
 import app.graph.Graph;
+import app.metaball.Metaball;
 import app.phys.Cloud;
 import app.phys.PSys;
 import app.ui.Display;
@@ -34,6 +35,7 @@ public class App extends PApplet {
 //	public static float ZOOM = 1;
 	//	public static float setWorldScl = 10;
 //	private static ToxiclibsSupport GFX;
+	private Metaball MBALL;
 	public static PSys PSYS;
 	public static Cloud CLOUD;
 	public static Graph GRAPH;
@@ -64,6 +66,7 @@ public class App extends PApplet {
 		Graph.rebuild();
 		GEDIT = new Editor();
 		VSYS = new VoronoiDiagram(this);
+		MBALL = new Metaball(this);
 		Gui.init();
 		size(WIDTH, HEIGHT, P2D);
 		frameRate(60);
@@ -84,6 +87,7 @@ public class App extends PApplet {
 		PSYS.draw();
 		CLOUD.draw();
 		display.draw();
+		MBALL.update();
 		if (RECORDING) { RECORDING = false; endRecord(); System.out.println("SVG EXPORTED SUCCESSFULLY"); }
 		CP5.draw();
 	}
@@ -114,6 +118,8 @@ public class App extends PApplet {
 				case 'q': Editor.createNewBranch(Gui.capacitySlider.getValue(), true); break;
 				case 'w': Editor.createNewBranch(Gui.capacitySlider.getValue(), false); break;
 				case 'l': Editor.lockNode(); break;
+				case 'm': Metaball.isMetaUpdating = !Metaball.isMetaUpdating; break;
+
 //				case 'o': if (!Editor.hasActiveNode()) VSYS.addCloud(50);
 //				case 'p': if (!Editor.hasActiveNode()) VSYS.addExtras(9);
 			}
