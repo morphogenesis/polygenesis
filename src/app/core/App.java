@@ -52,7 +52,7 @@ public class App extends PApplet {
 	public static void __rebelReload() {
 		System.out.println("********************  rebelRyeload  ********************");
 		System.out.println("Current File: " + filepath);
-		Gui.init();
+//		Gui.init();
 	}
 	public void setup() {
 //		P5 = this;
@@ -88,8 +88,18 @@ public class App extends PApplet {
 		CLOUD.draw();
 		display.draw();
 		MBALL.update();
+		drawStatusbar();
 		if (RECORDING) { RECORDING = false; endRecord(); System.out.println("SVG EXPORTED SUCCESSFULLY"); }
 		CP5.draw();
+	}
+	float fps = 0;
+	private void drawStatusbar() {
+		Vec2D pos = new Vec2D(20, HEIGHT - 100);
+
+		if (frameCount % 10 == 0) {fps = frameRate;}
+		fill(0xffffffff);
+		text(fps, pos.x, pos.y);
+		noFill();
 	}
 
 	public void controlEvent(ControlEvent theEvent) {
@@ -119,6 +129,8 @@ public class App extends PApplet {
 				case 'w': Editor.createNewBranch(Gui.capacitySlider.getValue(), false); break;
 				case 'l': Editor.lockNode(); break;
 				case 'm': Metaball.isMetaUpdating = !Metaball.isMetaUpdating; break;
+				case '6': MBALL.setDifferentialMethod("euler"); break;
+				case '7': MBALL.setDifferentialMethod("rk2"); break;
 
 //				case 'o': if (!Editor.hasActiveNode()) VSYS.addCloud(50);
 //				case 'p': if (!Editor.hasActiveNode()) VSYS.addExtras(9);

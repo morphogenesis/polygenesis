@@ -23,7 +23,7 @@ public class VoronoiDiagram {
 		if ((Gui.drawVoronoi) && (!Graph.nodes.isEmpty())) {
 			voronoi = new Voronoi();
 			for (Node n : Graph.nodes) { voronoi.addPoint(n.getParticle2D()); }
-			if (!points.isEmpty()) for (Vec2D v : points) { if (v != null) voronoi.addPoint(v); }
+//			if (!points.isEmpty()) for (Vec2D v : points) { if (v != null) voronoi.addPoint(v); }
 //			voronoi.addPoints(points);
 //			for (Vec2D v : PSys.attractorParticles) { voronoi.addPoint(v); }
 //			for (Vec2D v : points) { voronoi.addPoint(v); }
