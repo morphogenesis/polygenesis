@@ -14,6 +14,7 @@ public class VoronoiDiagram {
 	private final PApplet p5;
 	//	private final ArrayList<Vec2D> extras = new ArrayList<>();
 	private final PolygonClipper2D clipper = new SutherlandHodgemanClipper(PSys.getBounds());
+	private ConvexPolygonClipper metaballClipper;
 	//	private final ArrayList<Vec2D> voidSites = new ArrayList<>();
 	private Voronoi voronoi;
 	public VoronoiDiagram(PApplet $p5) { this.p5 = $p5; }
@@ -53,7 +54,6 @@ public class VoronoiDiagram {
 		p5.noStroke();
 		p5.noFill();
 	}
-
 	private void drawBezier(Polygon2D poly, int stroke, int fill) {
 		if (fill == -1) { p5.noFill(); } else p5.fill(fill);
 		if (stroke == -1) { p5.noStroke(); } else p5.stroke(stroke);
@@ -75,7 +75,6 @@ public class VoronoiDiagram {
 		p5.noFill();
 		p5.noStroke();
 	}
-
 	private void drawHandles(Polygon2D poly, int stroke, int fill) {
 		if (fill == -1) { p5.noFill(); } else p5.fill(fill);
 		if (stroke == -1) { p5.noStroke(); } else p5.stroke(stroke);
@@ -99,6 +98,8 @@ public class VoronoiDiagram {
 		p5.text(index, v.x + 10, v.y);
 		p5.noFill();
 	}
+
+}
 
 /*	public void addExtras(int cnt) {
 		for (int i = 0; i < cnt; i++) {
@@ -138,8 +139,6 @@ public class VoronoiDiagram {
 			p5.text(area, 1600, (10 * i) + 500);
 		} p5.noFill();
 	}*/
-}
-
 /*
 	public void draw() {
 		if (Gui.drawVoronoi) {

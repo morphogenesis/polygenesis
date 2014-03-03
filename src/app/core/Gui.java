@@ -2,7 +2,7 @@ package app.core;
 
 import app.graph.Editor;
 import app.graph.Graph;
-import app.metaball.Metaball;
+import app.metaball.Old_Metaball;
 import app.phys.Cloud;
 import app.phys.PSys;
 import app.xml.Node;
@@ -150,20 +150,20 @@ public class Gui {
 				case "isCloudUpdating": isCloudUpdating = !isCloudUpdating; break;
 				case "drawCloud": drawCloud = !drawCloud; break;
 
-				case "isMetaUpdating": Metaball.isMetaUpdating = !Metaball.isMetaUpdating; break;
-				case "isMetaDynamic": Metaball.isMetaDynamic = !Metaball.isMetaDynamic; break;
-				case "drawMetaLine": Metaball.drawMetaLine = !Metaball.drawMetaLine; break;
-				case "drawMetaPnt": Metaball.drawMetaPnt = !Metaball.drawMetaPnt; break;
-				case "drawMetaEdgePos": Metaball.drawMetaEdgePos = !Metaball.drawMetaEdgePos; break;
-				case "drawMetaPos0": Metaball.drawMetaPos0 = !Metaball.drawMetaPos0; break;
-				case "setMetaVisc": Metaball.viscosity = theValue; break;
-				case "setMetaThresh": Metaball.threshold = theValue; break;
-				case "setMetaStep": Metaball.stepping = theValue; break;
-				case "setMetaTrack": Metaball.tracking = theValue; break;
-				case "setMetaMaxIter": Metaball.maxIter = (int) theValue; break;
-				case "setMetaMaxPts": Metaball.maxPts = (int) theValue; break;
-				case "setMetaMaxTrackIter": Metaball.maxTrackIter = (int) theValue; break;
-				case "setMetaBorderStep": Metaball.borderStepSize = theValue; break;
+				case "isMetaUpdating": Old_Metaball.isMetaUpdating = !Old_Metaball.isMetaUpdating; break;
+				case "isMetaDynamic": Old_Metaball.isMetaDynamic = !Old_Metaball.isMetaDynamic; break;
+				case "drawMetaLine": Old_Metaball.drawMetaLine = !Old_Metaball.drawMetaLine; break;
+				case "drawMetaPnt": Old_Metaball.drawMetaPnt = !Old_Metaball.drawMetaPnt; break;
+				case "drawMetaEdgePos": Old_Metaball.drawMetaEdgePos = !Old_Metaball.drawMetaEdgePos; break;
+				case "drawMetaPos0": Old_Metaball.drawMetaPos0 = !Old_Metaball.drawMetaPos0; break;
+				case "setMetaVisc": Old_Metaball.viscosity = theValue; break;
+				case "setMetaThresh": Old_Metaball.threshold = theValue; break;
+				case "setMetaStep": Old_Metaball.stepping = theValue; break;
+				case "setMetaTrack": Old_Metaball.tracking = theValue; break;
+				case "setMetaMaxIter": Old_Metaball.maxIter = (int) theValue; break;
+				case "setMetaMaxPts": Old_Metaball.maxPts = (int) theValue; break;
+				case "setMetaMaxTrackIter": Old_Metaball.maxTrackIter = (int) theValue; break;
+				case "setMetaBorderStep": Old_Metaball.borderStepSize = theValue; break;
 
 				default: if (theEvent.getController() != fileMenu) {
 					System.out.println("Missing ControlEvent [" + theEvent.getController().getName() + "=" + theValue + "]");
@@ -212,14 +212,14 @@ public class Gui {
 		CP5.addSlider("setVorOffset").setValue(setVorOffset).setRange(-10, 10).setDecimalPrecision(0).setGroup(vorGroup).linebreak();
 		CP5.end();
 		CP5.begin(10, 12);
-		CP5.addSlider("setMetaVisc").setValue(Metaball.viscosity).setRange(1, 3).setDecimalPrecision(1).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaThresh").setValue(Metaball.threshold).setRange(0.0f, 0.03f).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaStep").setValue(Metaball.stepping).setRange(.01f, 50).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaTrack").setValue(Metaball.tracking).setRange(0.001f, 2).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaMaxIter").setValue(Metaball.maxIter).setRange(1, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaMaxPts").setValue(Metaball.maxPts).setRange(1, 50).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaMaxTrackIter").setValue(Metaball.maxTrackIter).setRange(1, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
-		CP5.addSlider("setMetaBorderStep").setValue(Metaball.borderStepSize).setRange(0.001f, 50).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaVisc").setValue(Old_Metaball.viscosity).setRange(1, 3).setDecimalPrecision(1).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaThresh").setValue(Old_Metaball.threshold).setRange(0.0f, 0.03f).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaStep").setValue(Old_Metaball.stepping).setRange(.01f, 50).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaTrack").setValue(Old_Metaball.tracking).setRange(0.001f, 2).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxIter").setValue(Old_Metaball.maxIter).setRange(1, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxPts").setValue(Old_Metaball.maxPts).setRange(1, 50).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaMaxTrackIter").setValue(Old_Metaball.maxTrackIter).setRange(1, 1000).setDecimalPrecision(0).setGroup(metaGroup).linebreak();
+		CP5.addSlider("setMetaBorderStep").setValue(Old_Metaball.borderStepSize).setRange(0.001f, 50).setDecimalPrecision(3).setGroup(metaGroup).linebreak();
 		CP5.end();
 		CP5.begin(10, 12);
 		CP5.addSlider("setCloudVecWgt").setValue(cloudVecWgt).setRange(.1f, 3).setDecimalPrecision(2).setGroup(cloudGroup).linebreak();
@@ -271,7 +271,7 @@ public class Gui {
 		voronoi_options.add("drawVorCol", 1).setCaptionLabel("Draw Info");
 		voronoi_options.add("isVorOffset", 1).setCaptionLabel("Is Offset");
 		voronoi_options.add("isVorUpdating", 1).setCaptionLabel("Is Updating");
-		MultiListButton metaball_options = fileMenu.add("metaballButton", 6).setWidth(130).setHeight(20); metaball_options.setCaptionLabel("Metaball");
+		MultiListButton metaball_options = fileMenu.add("metaballButton", 6).setWidth(130).setHeight(20); metaball_options.setCaptionLabel("Old_Metaball");
 		metaball_options.add("isMetaUpdating", 1).setCaptionLabel("Is Updating");
 		metaball_options.add("isMetaDynamic", 1).setCaptionLabel("Is Dynamic");
 		metaball_options.add("drawMetaLine", 1).setCaptionLabel("Draw Lines");

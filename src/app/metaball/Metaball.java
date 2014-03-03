@@ -1,213 +1,46 @@
 package app.metaball;
 
-import app.core.VoronoiDiagram;
-import app.graph.Graph;
-import app.xml.Node;
-import processing.core.PApplet;
-import toxi.geom.Polygon2D;
-import toxi.geom.ReadonlyVec2D;
-import toxi.geom.Vec2D;
-import toxi.physics2d.VerletParticle2D;
-import toxi.physics3d.VerletParticle3D;
-
-import java.util.ArrayList;
+import util.MathUtil;
 
 public class Metaball {
-	private PApplet p5;
-	private ArrayList<MVec2D> MVec2Ds = new ArrayList<>();
-	public static ArrayList<Vec2D> points = new ArrayList<>();
-	public static boolean isMetaDynamic;
-	public static boolean isMetaUpdating;
-	public static boolean drawMetaLine;
-	public static boolean drawMetaPnt;
-	public static boolean drawMetaEdgePos;
-	public static boolean drawMetaPos0;
-	public static float borderStepSize = 0.01f;/*7.5*/
-	public static float viscosity = 2;
-	public static float viscosityNorm = 1.0f / viscosity;
-	public static float minThreshold;
-	public static float minSize = 1e32f;
-	public static float threshold = 0.003f;
-	public static float stepping = 20;
-	public static float tracking = 0.25f;
-	private Polygon2D poly;
-	private String differentialMethod = "euler";
-	public static int maxIter = 100;
-	public static int maxPts = 25;
-	public static int maxTrackIter = 10;/*160*/
-	public Metaball(PApplet p5) {
-		this.p5 = p5;
-		poly = new Polygon2D();
+
+	public static int MIN_STRENGTH = 1;
+	public static float MAX_STRENGTH = 100;
+	private Vector2D _position;
+	private float _strength;
+	boolean tracking;
+	Vector2D edge;
+	Vector2D direction;
+
+	public Metaball(Vector2D position, float strength) {
+		_position = position.clone();
+		_strength = strength;
+		tracking = false;
+		edge = position.clone();
+		direction = new Vector2D((float) Math.random() * 2 - 1, (float) Math.random() * 2 - 1);
 	}
 
-	public void addParticle(Vec2D v, float w) {
-		MVec2D mv = new MVec2D(v);
-		mv.setWeight(w);
-		if (mv.getWeight() < minSize) minSize = mv.getWeight();
-		minThreshold = (float) Math.pow(minSize / threshold, viscosityNorm);
-		MVec2Ds.add(mv);
-	}
-	public void update() {
-		MVec2Ds = new ArrayList<>();
-		for (Node n : Graph.nodes) { addParticle(n.getParticle2D(), n.getSize()); }
-		for (MVec2D mp : MVec2Ds) { if (mp.getWeight() < minSize) minSize = mp.getWeight(); minThreshold = (float) Math.pow(minSize / threshold, viscosityNorm); }
-		draw();
+	public float strengthAt(Vector2D v, float c) {
+		float div = (float) Math.pow(Vector2D.subtract(_position, v).getLengthSq(), c * 0.5f);
+		return (div != 0) ? (_strength / div) : 10000;
 	}
 
-	public void draw() {
-		if ((!MVec2Ds.isEmpty()) && (isMetaUpdating)) {
-
-			for (MVec2D mp : MVec2Ds) resetMetaParticle(mp);
-
-			poly = new Polygon2D();
-			int loopIndex = 0;
-
-			while (loopIndex < maxIter) {
-				loopIndex++;
-				points = new ArrayList<>();
-				for (MVec2D m : MVec2Ds) {
-					if (!m.isTracked) continue;
-					Vec2D temp = stepOnceTowardsBorder(m.edgePos, calcForce(m.edgePos));
-					//	m.edgePos = rungeKutta2(temp, stepping);m.edgePos = euler(temp, stepping);
-					m.edgePos = calc_differential(temp, stepping, differentialMethod);
-
-//					if (drawMetaLine) {
-//						p5.stroke(0xffffffff);
-//						p5.line(m.x, m.y, m.edgePos.x, m.edgePos.y);/*p5.line(m.pos0.x, m.pos0.y, m.edgePos.x, m.edgePos.y);*/
-//					}
-					if (loopIndex % 2 == 0) { points.add(m.edgePos); }					/*	if (points.size() > maxPts) points.remove(0);*/
-					VoronoiDiagram.points = points;
-					for (MVec2D mpb : MVec2Ds) {
-						float distanceSq = mpb.pos0.distanceToSquared(m.edgePos);
-						if ((mpb != m || loopIndex > 3) && (distanceSq < (stepping * stepping))) m.isTracked = false;
-					}//	isTracked(loopIndex, m);
-					drawMetaparticle();
-				}
-			}
-//			if (drawMetaPos0) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xff4cc3c7); p5.ellipse(mp.pos0.x, mp.pos0.y, 4, 4); } }
-//			if (drawMetaEdgePos) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xff888888); p5.ellipse(mp.edgePos.x, mp.edgePos.y, 4, 4); } }
-//			if (drawMetaLine) { for (MVec2D mp : MVec2Ds) { p5.stroke(0xffffff00); p5.line(mp.edgePos.x, mp.edgePos.y, mp.pos0.x, mp.pos0.y); } }
-		}
+	public Vector2D position() {
+		return _position;
+	}
+	public void position(Vector2D value) {
+		_position.copy(value);
 	}
 
-	private void drawMetaparticle() {
-		if (drawMetaLine) {
-			for (MVec2D m : MVec2Ds) {
-				p5.stroke(0xff00ffff); p5.line(m.edgePos.x, m.edgePos.y, m.pos0.x, m.pos0.y);
-				p5.stroke(0xffff00ff); p5.line(m.x, m.y, m.edgePos.x, m.edgePos.y);
-			}
-		}
-		if (drawMetaPnt) { for (Vec2D a : points) { p5.fill(0xffff0000); p5.ellipse(a.x, a.y, 4, 4); } }
-		if (drawMetaPos0) { for (MVec2D mp : MVec2Ds) { p5.fill(0xff00ff00); p5.ellipse(mp.pos0.x, mp.pos0.y, 6, 6); } }
-		if (drawMetaEdgePos) { for (MVec2D mp : MVec2Ds) { p5.fill(0xff0000ff); p5.ellipse(mp.edgePos.x, mp.edgePos.y, 8, 8); } }
-
-
-//		p5.stroke(0xffff0000); p5.ellipse(mp.x, mp.y, mp.weight, mp.weight);
-//		if (drawMetaPos0) { p5.stroke(0xffff66ff); p5.ellipse(mp.pos0.x, mp.pos0.y, 4, 4); }
-//		if (drawMetaEdgePos) { p5.strokeWeight(2); p5.stroke(0xff66ffff); p5.point(mp.edgePos.x, mp.edgePos.y); p5.strokeWeight(1); p5.text(MVec2Ds.indexOf(mp), mp.x, mp.y); }
-//		if (drawMetaLine) {p5.stroke(0xffffff66); p5.line(mp.edgePos.x, mp.edgePos.y, mp.pos0.x, mp.pos0.y); }
-		p5.noStroke();
+	public float strength() {
+		return _strength;
 	}
 
-	private void isTracked(int loopIndex, MVec2D m) {
-		for (MVec2D mpb : MVec2Ds) {
-			float distanceSq = mpb.pos0.distanceToSquared(m.edgePos);
-			if ((mpb != m || loopIndex > 3) && (distanceSq < (stepping * stepping))) m.isTracked = false;
-		}
+	public void strength(float value) {
+		_strength = MathUtil.clamp(value, MIN_STRENGTH, MAX_STRENGTH);
 	}
 
-	private void resetMetaParticle(MVec2D mp) {
-		Vec2D borderPlusOne;
-		if (isMetaDynamic) { borderPlusOne = new Vec2D(mp.x + p5.random(-tracking, tracking), mp.y + p5.random(-tracking, tracking)); } else borderPlusOne = new Vec2D(mp.x - tracking, mp.y - tracking);
-		mp.pos0 = trackTheBorder(borderPlusOne);
-		mp.edgePos = mp.pos0;
-		mp.isTracked = true;
+	public String toString() {
+		return "[object app.core.Metaball][position=" + position() + "][size=" + strength() + "]";
 	}
-	public Vec2D stepOnceTowardsBorder(Vec2D pos, float forceAtPoint) {
-		Vec2D np = calcNormal(pos);
-		float stepsize = minThreshold - (float) Math.pow(minSize / forceAtPoint, viscosityNorm) + borderStepSize;
-		return new Vec2D(pos.x + np.x * stepsize, pos.y + np.y * stepsize);
-	}
-	public Vec2D trackTheBorder(Vec2D borderPlusOne) {
-		float force = calcForce(borderPlusOne);
-		int iters = 0;
-		while (force > threshold) {
-			force = calcForce(borderPlusOne);
-			borderPlusOne = stepOnceTowardsBorder(borderPlusOne, force);
-			iters++;
-			if (iters > maxTrackIter) break;
-		} return borderPlusOne;
-	}
-	public float calcForce(Vec2D pos) {
-		float forceAtPoint = 0.0f;
-		for (MVec2D a : MVec2Ds) {
-			Vec2D tmp = new Vec2D(a.x - pos.x, a.y - pos.y);
-			float div = (float) Math.pow((float) Math.sqrt(tmp.x * tmp.x + tmp.y * tmp.y), viscosity);
-			if (div != 0) { forceAtPoint += a.getWeight() / div; } else forceAtPoint += 1e32f;
-		} return forceAtPoint;
-	}
-
-	public Vec2D calc_differential(Vec2D pos, float h, String method) {
-		switch (method) {
-			case "rk2":
-				Vec2D t1 = calcTangent(pos);
-				Vec2D t2 = calcTangent(new Vec2D(pos.x + t1.x * h / 2, pos.y + t1.y * h / 2));
-				return new Vec2D(pos.x + h * t2.x, pos.y + h * t2.y);
-			case "euler":
-				return new Vec2D((pos.x + h * calcTangent(pos).x), (pos.y + h * calcTangent(pos).y));
-			default:
-				return new Vec2D((pos.x + h * calcTangent(pos).x), (pos.y + h * calcTangent(pos).y));
-		}
-	}
-	public Vec2D rungeKutta2(Vec2D pos, float h) {
-		Vec2D t1 = calcTangent(pos);
-		Vec2D t2 = calcTangent(new Vec2D(pos.x + t1.x * h / 2, pos.y + t1.y * h / 2));
-		return new Vec2D(pos.x + h * t2.x, pos.y + h * t2.y);
-	}
-	public Vec2D euler(Vec2D pos, float h) {
-		return new Vec2D((pos.x + h * calcTangent(pos).x), (pos.y + h * calcTangent(pos).y));
-	}
-	public Vec2D calcTangent(Vec2D pos) {
-		Vec2D np = this.calcNormal(pos);
-		//noinspection SuspiciousNameCombination
-		return new Vec2D(-np.y, np.x);
-	}
-	public Vec2D calcNormal(Vec2D pos) {
-		Vec2D np = new Vec2D(0, 0);
-		for (MVec2D a : MVec2Ds) {
-			Vec2D fromPointToBall = new Vec2D(a.x - pos.x, a.y - pos.y);
-			float centerDist = (float) Math.sqrt(fromPointToBall.x * fromPointToBall.x + fromPointToBall.y * fromPointToBall.y);
-			float rDiv = 1.0f / (float) Math.pow(centerDist, 2.0f + viscosity);
-			np.x += -viscosity * a.getWeight() * fromPointToBall.x * rDiv;
-			np.y += -viscosity * a.getWeight() * fromPointToBall.y * rDiv;
-		} float rLen = 1.0f / (float) Math.sqrt(np.x * np.x + np.y * np.y);
-		return new Vec2D(np.x * rLen, np.y * rLen);
-	}
-
-	public void setDifferentialMethod(String method) { this.differentialMethod = method; }
-
-	/**
-	 * Created on 2/14/14.
-	 */
-	public static class MVec2D extends Vec2D {
-		public Vec2D pos0;
-		public Vec2D edgePos;
-		public Boolean isTracked;
-		public float weight;
-
-		public MVec2D(ReadonlyVec2D v) {
-			super(v);
-		}
-		public MVec2D(VerletParticle2D p) {
-			super(p);
-			pos0 = new Vec2D(this);
-			edgePos = new Vec2D(this);
-			weight = 1;
-		}
-		public void setWeight(float weight) {
-			this.weight = weight;
-		}
-		public float getWeight() { return weight; }
-	}
-	
 }
